@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>Afterimage</title>
+  <defs>
+    <radialGradient id="room" cx="42%" cy="36%" r="78%">
+      <stop offset="0" stop-color="#4a1d1a"/>
+      <stop offset=".55" stop-color="#24150f"/>
+      <stop offset="1" stop-color="#130d0a"/>
+    </radialGradient>
+    <radialGradient id="echo" cx="50%" cy="50%" r="50%">
+      <stop offset=".55" stop-color="#b4664a" stop-opacity="0"/>
+      <stop offset=".84" stop-color="#d4794f" stop-opacity=".85"/>
+      <stop offset="1" stop-color="#7a2e2e" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="echoFill" cx="45%" cy="40%" r="60%">
+      <stop offset="0" stop-color="#a03a2c" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#7a2e2e" stop-opacity=".12"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbf3e2"/>
+      <stop offset=".5" stop-color="#e7d3b0"/>
+      <stop offset="1" stop-color="#a8865a"/>
+    </linearGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f6e2bf"/>
+      <stop offset=".62" stop-color="#e9a86e"/>
+      <stop offset="1" stop-color="#b4664a"/>
+    </linearGradient>
+    <radialGradient id="blade" cx="232" cy="238" r="126" gradientUnits="userSpaceOnUse">
+      <stop offset=".3" stop-color="#5a4636"/>
+      <stop offset=".62" stop-color="#33271f"/>
+      <stop offset="1" stop-color="#17110d"/>
+    </radialGradient>
+    <clipPath id="open"><path d="M232.0 193.0 L267.2 209.9 L275.9 248.0 L251.5 278.5 L212.5 278.5 L188.1 248.0 L196.8 209.9 Z"/></clipPath>
+    <clipPath id="lens"><circle cx="232" cy="238" r="122"/></clipPath>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#room)"/>
+  <rect x="10" y="10" width="492" height="492" rx="104" fill="none" stroke="#f3ede2" stroke-opacity=".07" stroke-width="2"/>
+  <g fill="#f3ede2" fill-opacity=".12"><rect x="52" y="30" width="22" height="13" rx="3.5"/><rect x="52" y="469" width="22" height="13" rx="3.5"/><rect x="96" y="30" width="22" height="13" rx="3.5"/><rect x="96" y="469" width="22" height="13" rx="3.5"/><rect x="140" y="30" width="22" height="13" rx="3.5"/><rect x="140" y="469" width="22" height="13" rx="3.5"/><rect x="184" y="30" width="22" height="13" rx="3.5"/><rect x="184" y="469" width="22" height="13" rx="3.5"/><rect x="228" y="30" width="22" height="13" rx="3.5"/><rect x="228" y="469" width="22" height="13" rx="3.5"/><rect x="272" y="30" width="22" height="13" rx="3.5"/><rect x="272" y="469" width="22" height="13" rx="3.5"/><rect x="316" y="30" width="22" height="13" rx="3.5"/><rect x="316" y="469" width="22" height="13" rx="3.5"/><rect x="360" y="30" width="22" height="13" rx="3.5"/><rect x="360" y="469" width="22" height="13" rx="3.5"/><rect x="404" y="30" width="22" height="13" rx="3.5"/><rect x="404" y="469" width="22" height="13" rx="3.5"/><rect x="448" y="30" width="22" height="13" rx="3.5"/><rect x="448" y="469" width="22" height="13" rx="3.5"/></g>
+
+  <!-- the afterimage: the lens, echoed -->
+  <circle cx="290" cy="290" r="128" fill="url(#echoFill)"/>
+  <circle cx="290" cy="290" r="140" fill="url(#echo)"/>
+  <circle cx="290" cy="290" r="128" fill="none" stroke="#f0a77a" stroke-opacity=".75" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round"/>
+
+  <!-- the lens -->
+  <circle cx="232" cy="238" r="136" fill="url(#rim)"/>
+  <circle cx="232" cy="238" r="136" fill="none" stroke="#3b2a1f" stroke-opacity=".35" stroke-width="1.5"/>
+  <circle cx="232" cy="238" r="127" fill="#1b1410"/>
+  <g clip-path="url(#lens)">
+    <circle cx="232" cy="238" r="126" fill="#0f0b09"/>
+    <path d="M232.0 194.0 L266.4 210.6 Q309.7 245.4 346.7 287.7 A125 125 0 0 0 240.7 113.3 Q274.0 165.3 232.0 194.0 Z" fill="url(#blade)" stroke="#120d0a" stroke-width="1.4"/>
+    <path d="M266.4 210.6 L274.9 247.8 Q274.6 303.3 264.7 358.7 A125 125 0 0 0 334.9 167.1 Q315.1 225.5 266.4 210.6 Z" fill="url(#blade)" stroke="#120d0a" stroke-width="1.4"/>
+    <path d="M274.9 247.8 L251.1 277.6 Q207.5 312.1 158.0 338.8 A125 125 0 0 0 351.6 274.2 Q293.6 295.1 274.9 247.8 Z" fill="url(#blade)" stroke="#120d0a" stroke-width="1.4"/>
+    <path d="M251.1 277.6 L212.9 277.6 Q158.8 265.0 107.1 243.0 A125 125 0 0 0 278.2 354.1 Q225.7 321.8 251.1 277.6 Z" fill="url(#blade)" stroke="#120d0a" stroke-width="1.4"/>
+    <path d="M212.9 277.6 L189.1 247.8 Q165.2 197.7 150.2 143.5 A125 125 0 0 0 170.0 346.6 Q162.6 285.3 212.9 277.6 Z" fill="url(#blade)" stroke="#120d0a" stroke-width="1.4"/>
+    <path d="M189.1 247.8 L197.6 210.6 Q221.9 160.7 254.9 115.1 A125 125 0 0 0 108.5 257.2 Q151.7 213.2 189.1 247.8 Z" fill="url(#blade)" stroke="#120d0a" stroke-width="1.4"/>
+    <path d="M197.6 210.6 L232.0 194.0 Q286.2 181.9 342.4 179.3 A125 125 0 0 0 139.9 153.4 Q201.3 159.8 197.6 210.6 Z" fill="url(#blade)" stroke="#120d0a" stroke-width="1.4"/>
+    <path d="M266.4 210.6 Q309.7 245.4 346.7 287.7" fill="none" stroke="#e6c99c" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/>
+    <path d="M274.9 247.8 Q274.6 303.3 264.7 358.7" fill="none" stroke="#e6c99c" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/>
+    <path d="M251.1 277.6 Q207.5 312.1 158.0 338.8" fill="none" stroke="#e6c99c" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/>
+    <path d="M212.9 277.6 Q158.8 265.0 107.1 243.0" fill="none" stroke="#e6c99c" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/>
+    <path d="M189.1 247.8 Q165.2 197.7 150.2 143.5" fill="none" stroke="#e6c99c" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/>
+    <path d="M197.6 210.6 Q221.9 160.7 254.9 115.1" fill="none" stroke="#e6c99c" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/>
+    <path d="M232.0 194.0 Q286.2 181.9 342.4 179.3" fill="none" stroke="#e6c99c" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- through the aperture: a tiny developing print — sky, sun, horizon -->
+  <g clip-path="url(#open)">
+    <rect x="172" y="178" width="120" height="120" fill="url(#sky)"/>
+    <circle cx="242" cy="242" r="11" fill="#fff4dc"/>
+    <path d="M172 258 Q212 246 236 256 T292 252 V298 H172Z" fill="#4a2a20"/>
+    <path d="M172 268 Q232 262 292 270 V298 H172Z" fill="#2c1915"/>
+  </g>
+  <path d="M232.0 193.0 L267.2 209.9 L275.9 248.0 L251.5 278.5 L212.5 278.5 L188.1 248.0 L196.8 209.9 Z" fill="none" stroke="#f6e2bf" stroke-opacity=".5" stroke-width="1.2"/>
+
+  <!-- glass: a soft reflection -->
+  <path d="M140 190 A116 116 0 0 1 204 134" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="7" stroke-linecap="round"/>
+  <path d="M132 218 A116 116 0 0 1 136 202" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- engraved ring ticks -->
+  <g stroke="#3b2a1f" stroke-opacity=".45" stroke-width="1.4"><line x1="361.0" y1="238.0" x2="366.0" y2="238.0"/><line x1="359.0" y1="260.4" x2="364.0" y2="261.3"/><line x1="353.2" y1="282.1" x2="357.9" y2="283.8"/><line x1="343.7" y1="302.5" x2="348.0" y2="305.0"/><line x1="330.8" y1="320.9" x2="334.6" y2="324.1"/><line x1="314.9" y1="336.8" x2="318.1" y2="340.6"/><line x1="296.5" y1="349.7" x2="299.0" y2="354.0"/><line x1="276.1" y1="359.2" x2="277.8" y2="363.9"/><line x1="254.4" y1="365.0" x2="255.3" y2="370.0"/><line x1="232.0" y1="367.0" x2="232.0" y2="372.0"/><line x1="209.6" y1="365.0" x2="208.7" y2="370.0"/><line x1="187.9" y1="359.2" x2="186.2" y2="363.9"/><line x1="167.5" y1="349.7" x2="165.0" y2="354.0"/><line x1="149.1" y1="336.8" x2="145.9" y2="340.6"/><line x1="133.2" y1="320.9" x2="129.4" y2="324.1"/><line x1="120.3" y1="302.5" x2="116.0" y2="305.0"/><line x1="110.8" y1="282.1" x2="106.1" y2="283.8"/><line x1="105.0" y1="260.4" x2="100.0" y2="261.3"/><line x1="103.0" y1="238.0" x2="98.0" y2="238.0"/><line x1="105.0" y1="215.6" x2="100.0" y2="214.7"/><line x1="110.8" y1="193.9" x2="106.1" y2="192.2"/><line x1="120.3" y1="173.5" x2="116.0" y2="171.0"/><line x1="133.2" y1="155.1" x2="129.4" y2="151.9"/><line x1="149.1" y1="139.2" x2="145.9" y2="135.4"/><line x1="167.5" y1="126.3" x2="165.0" y2="122.0"/><line x1="187.9" y1="116.8" x2="186.2" y2="112.1"/><line x1="209.6" y1="111.0" x2="208.7" y2="106.0"/><line x1="232.0" y1="109.0" x2="232.0" y2="104.0"/><line x1="254.4" y1="111.0" x2="255.3" y2="106.0"/><line x1="276.1" y1="116.8" x2="277.8" y2="112.1"/><line x1="296.5" y1="126.3" x2="299.0" y2="122.0"/><line x1="314.9" y1="139.2" x2="318.1" y2="135.4"/><line x1="330.8" y1="155.1" x2="334.6" y2="151.9"/><line x1="343.7" y1="173.5" x2="348.0" y2="171.0"/><line x1="353.2" y1="193.9" x2="357.9" y2="192.2"/><line x1="359.0" y1="215.6" x2="364.0" y2="214.7"/></g>
+</svg>
