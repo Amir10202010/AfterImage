@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { useStore } from './lib/store'
+import Palette from './components/Palette'
+import Toaster from './components/Toaster'
+
+const hashRef = { current: window.location.hash.slice(1) || '/' }
 import Memories from './views/Home'
 import Today from './views/Today'
 import Settings from './views/Settings'
@@ -21,7 +26,18 @@ function useHash() {
   const [hash, setHash] = useState(() => window.location.hash.slice(1) || '/')
   useEffect(() => {
     const on = () => {
-      setHash(window.location.hash.slice(1) || '/')
+      const next = window.location.hash.slice(1) || '/'
+      const room = (h: string) => h.split('?')[0].split('/')[1] ?? ''
+      // a soft cross-fade between rooms, where the browser can do it and motion is welcome
+      type VT = { ready: Promise<void>; finished: Promise<void>; updateCallbackDone: Promise<void> }
+      const doc = document as Document & { startViewTransition?: (cb: () => void) => VT }
+      const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+      if (doc.startViewTransition && !calm && !document.hidden && room(next) !== room(hashRef.current)) {
+        const vt = doc.startViewTransition(() => flushSync(() => setHash(next)))
+        // a skipped transition (hidden tab, quick double navigation) is fine — the page still updates
+        for (const p of [vt.ready, vt.finished, vt.updateCallbackDone]) p.catch(() => {})
+      } else setHash(next)
+      hashRef.current = next
     }
     window.addEventListener('hashchange', on)
     return () => window.removeEventListener('hashchange', on)
@@ -125,6 +141,8 @@ export default function App() {
     <>
       {error && <div className="banner-error" role="alert">{error}</div>}
       {tab === null ? view : <Shell tab={tab}>{view}</Shell>}
+      {name !== '' && name !== 'welcome' && <Palette />}
+      <Toaster />
     </>
   )
 }

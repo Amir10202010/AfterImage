@@ -2,8 +2,19 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { letterStatus, useStore } from '../lib/store'
 import Tour, { tourDone } from './Tour'
+import { openPalette } from './Palette'
 
-export type Tab = 'today' | 'journal' | 'memories' | 'letters' | 'none'
+// where you were before opening Settings, so the same button (or Esc) takes you back there
+let beforeSettings = window.location.hash.startsWith('#/settings') ? '#/today' : window.location.hash || '#/today'
+window.addEventListener('hashchange', (e) => {
+  const from = new URL(e.oldURL).hash
+  if (window.location.hash.startsWith('#/settings') && from && !from.startsWith('#/settings')) beforeSettings = from
+})
+export function closeSettings() {
+  window.location.hash = beforeSettings.slice(1)
+}
+
+export type Tab ='today' | 'journal' | 'memories' | 'letters' | 'none'
 
 const ICON: Record<string, ReactNode> = {
   today: (
@@ -36,6 +47,11 @@ const ICON: Record<string, ReactNode> = {
       <path d="M12 5v14M5 12h14" />
     </svg>
   ),
+  close: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  ),
   settings: (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
@@ -57,6 +73,7 @@ export default function Shell({ tab, children }: { tab: Tab; children: ReactNode
   const [sheet, setSheet] = useState(false)
   const [tour, setTour] = useState(() => !tourDone())
   const unread = letters.filter((l) => letterStatus(l) === 'arrived').length
+  const inSettings = window.location.hash.startsWith('#/settings')
 
   useEffect(() => {
     const on = () => setTour(true)
@@ -99,12 +116,26 @@ export default function Shell({ tab, children }: { tab: Tab; children: ReactNode
           {TABS.map(item)}
         </nav>
         <div className="topbar-right">
+          <button type="button" className="search-btn" onClick={() => openPalette()} aria-label="Search (Ctrl K)">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="6.5" />
+              <path d="M16 16l4.5 4.5" />
+            </svg>
+            <span className="search-btn-label">Search</span>
+            <kbd className="search-btn-kbd">{/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl K'}</kbd>
+          </button>
           <button type="button" className="btn btn-ink btn-sm add-btn" onClick={() => setSheet(true)} data-tour="add">
             <span className="nav-icon">{ICON.add}</span> New
           </button>
-          <a className={`icon-btn ${tab === 'none' ? '' : ''}`} href="#/settings" aria-label="Settings">
-            {ICON.settings}
-          </a>
+          <button
+            type="button"
+            className={`icon-btn settings-toggle ${inSettings ? 'is-on' : ''}`}
+            onClick={() => (inSettings ? closeSettings() : (window.location.hash = '/settings'))}
+            aria-label={inSettings ? 'Close settings' : 'Settings'}
+            aria-pressed={inSettings}
+          >
+            {inSettings ? ICON.close : ICON.settings}
+          </button>
         </div>
       </header>
 

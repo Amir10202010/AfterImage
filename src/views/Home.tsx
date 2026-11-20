@@ -8,6 +8,8 @@ import { connections } from '../lib/connect'
 import { OptionalImg, ScrapPhoto } from '../components/Scrap'
 import { dayIndex, dayPhotos } from '../lib/journal'
 import { ConfirmButton, PastLabel, StampSet } from '../components/common'
+import { randomMemoryHref } from '../components/Palette'
+import { toast } from '../lib/toast'
 
 export function useNow(every = 20000) {
   const [now, setNow] = useState(() => Date.now())
@@ -34,15 +36,47 @@ export default function Memories() {
   const now = useNow()
   const sealed = letters.filter((l) => letterStatus(l, now) === 'sealed').sort((a, b) => a.sealedUntil!.localeCompare(b.sealedUntil!))
   const developed = memories.filter((m) => m.progress.developedAt).length
+  const [q, setQ] = useState('')
+  const [show, setShow] = useState<Show>('all')
+  const [newest, setNewest] = useState(false)
+  const counts = useMemo(() => {
+    const c: Record<Show, number> = { all: memories.length, negative: 0, developed: 0, fading: 0 }
+    for (const m of memories) c[showOf(m)]++
+    c.developed += c.fading
+    return c
+  }, [memories])
+  const shown = useMemo(() => {
+    const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean)
+    const out = memories.filter((m) => {
+      const s = showOf(m)
+      if (show === 'negative' && s !== 'negative') return false
+      if (show === 'developed' && s === 'negative') return false
+      if (show === 'fading' && s !== 'fading') return false
+      if (!words.length) return true
+      const hay = [m.title, longDate(m.date), m.location, m.people.join(' '), m.mood, m.song?.title, m.song?.artist, m.story].join(' ').toLowerCase()
+      return words.every((w) => hay.includes(w))
+    })
+    return newest ? out.reverse() : out
+  }, [memories, q, show, newest])
+  const filtering = q.trim() !== '' || show !== 'all'
 
   return (
     <main className="paper home app-page">
       <header className="page-head">
         <h1 className="page-title">Memories</h1>
-        <a className="btn btn-ink btn-sm" href="#/new">
-          + Save a day
-        </a>
+        <span className="page-head-actions">
+          {memories.length > 1 && (
+            <a className="btn btn-ghost-ink btn-sm surprise" href={randomMemoryHref(memories)} title="Open a random memory (r)" aria-label="Surprise me — open a random memory">
+              ⟳<span className="surprise-label"> Surprise me</span>
+            </a>
+          )}
+          <a className="btn btn-ink btn-sm" href="#/new">
+            + Save a day
+          </a>
+        </span>
       </header>
+
+      {memories.length > 0 && <Stats memories={memories} />}
 
       <section className="section first" aria-labelledby="line-h">
         <div className="section-head">
@@ -51,8 +85,35 @@ export default function Memories() {
             {memories.length} {memories.length === 1 ? 'negative' : 'negatives'} · {developed} developed · tap one to develop it
           </p>
         </div>
+        {memories.length > 2 && (
+          <div className="mem-tools">
+            <label className="mem-search">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="11" cy="11" r="6.5" />
+                <path d="M16 16l4.5 4.5" />
+              </svg>
+              <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a day — title, place, person, song…" aria-label="Find a memory" />
+            </label>
+            <div className="chips" role="group" aria-label="Show">
+              {SHOWS.map(([id, label]) => (
+                <button key={id} type="button" className={`chip ${show === id ? 'is-on' : ''}`} aria-pressed={show === id} onClick={() => setShow(id)} disabled={id !== 'all' && counts[id] === 0}>
+                  {label} <span className="chip-n">{counts[id]}</span>
+                </button>
+              ))}
+              <button type="button" className="chip chip-sort" onClick={() => setNewest((x) => !x)} aria-label={newest ? 'Newest first — switch to oldest first' : 'Oldest first — switch to newest first'}>
+                {newest ? '↓ Newest' : '↑ Oldest'}
+              </button>
+            </div>
+          </div>
+        )}
         {memories.length === 0 && <OptionalImg src="/demo/ui/empty-memories.jpg" className="ui-art" />}
-        <DryingLine memories={memories} />
+        {filtering && shown.length === 0 ? (
+          <p className="mem-none">
+            No day matches. <button type="button" className="link" onClick={() => (setQ(''), setShow('all'))}>Clear the search</button>
+          </p>
+        ) : (
+          <DryingLine memories={shown} grouped={!newest} />
+        )}
       </section>
 
       {exposures.length > 0 && <Exposures memories={memories} exposures={exposures} />}
@@ -111,18 +172,80 @@ export function ArrivedLetter({ letter, memory }: { letter: Letter; memory?: Mem
   )
 }
 
-function DryingLine({ memories }: { memories: Memory[] }) {
+type Show = 'all' | 'negative' | 'developed' | 'fading'
+const SHOWS: [Show, string][] = [
+  ['all', 'All'],
+  ['negative', 'Negatives'],
+  ['developed', 'Prints'],
+  ['fading', 'Fading'],
+]
+function showOf(m: Memory): Exclude<Show, 'all'> {
+  if (!m.progress.developedAt) return 'negative'
+  return fadeOf(m) > 0.15 ? 'fading' : 'developed'
+}
+
+/** A small ledger of what's been kept: days, photos, the longest run, the busiest month. */
+function Stats({ memories }: { memories: Memory[] }) {
+  const { shoebox, letters } = useStore()
+  const s = useMemo(() => {
+    const days = new Set([...memories.map((m) => m.date), ...shoebox.map((x) => x.date)])
+    const sorted = [...days].sort()
+    let best = 0
+    let run = 0
+    let prev = 0
+    for (const d of sorted) {
+      const t = new Date(d + 'T12:00').getTime()
+      run = prev && Math.round((t - prev) / 86400000) === 1 ? run + 1 : 1
+      best = Math.max(best, run)
+      prev = t
+    }
+    const byMonth = new Map<string, number>()
+    for (const d of sorted) byMonth.set(d.slice(0, 7), (byMonth.get(d.slice(0, 7)) ?? 0) + 1)
+    const top = [...byMonth.entries()].sort((a, b) => b[1] - a[1])[0]
+    const people = new Set(memories.flatMap((m) => m.people)).size
+    return { days: days.size, best, top, people }
+  }, [memories, shoebox])
+  const cells: [string | number, string, string?][] = [
+    [s.days, s.days === 1 ? 'day kept' : 'days kept'],
+    [shoebox.length, 'photographs', '#/journal'],
+    [s.best, s.best === 1 ? 'day in a row, at best' : 'days in a row, at best'],
+    [s.people, s.people === 1 ? 'person in your days' : 'people in your days'],
+    [letters.length, letters.length === 1 ? 'letter' : 'letters', '#/letters'],
+  ]
+  if (s.top) cells.push([monthYear(s.top[0] + '-01').split(' ')[0].slice(0, 3) + ' ’' + s.top[0].slice(2, 4), 'your fullest month', `#/journal/${s.top[0]}`])
+  return (
+    <ul className="stats" aria-label="What you’ve kept">
+      {cells.map(([n, label, href]) => (
+        <li key={label}>
+          {href ? (
+            <a href={href}>
+              <b>{n}</b>
+              <span>{label}</span>
+            </a>
+          ) : (
+            <span className="stat">
+              <b>{n}</b>
+              <span>{label}</span>
+            </span>
+          )}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function DryingLine({ memories, grouped = true }: { memories: Memory[]; grouped?: boolean }) {
   const items = useMemo(() => {
     const out: ({ kind: 'year'; y: number } | { kind: 'm'; m: Memory })[] = []
     let last = 0
     for (const m of memories) {
       const y = year(m.date)
-      if (y !== last) out.push({ kind: 'year', y })
+      if (grouped && y !== last) out.push({ kind: 'year', y })
       last = y
       out.push({ kind: 'm', m })
     }
     return out
-  }, [memories])
+  }, [memories, grouped])
 
   return (
     <div className="line-wrap">
@@ -188,6 +311,15 @@ export function Threads({ memories }: { memories: Memory[] }) {
     window.setTimeout(() => {
       updateMemory(m.id, (x) => ({ ...x, ledger: { ...x.ledger, [tid]: { stamp: s, at: new Date().toISOString() } } }))
       setJust(null)
+      toast(`Stamped “${s.replace('-', ' ')}” — filed in ${m.title}.`, {
+        label: 'Undo',
+        run: () =>
+          updateMemory(m.id, (x) => {
+            const ledger = { ...x.ledger }
+            delete ledger[tid]
+            return { ...x, ledger }
+          }),
+      })
     }, 650)
   }
   return (
@@ -253,13 +385,13 @@ export function Colophon() {
         person. Their photographs are illustrations made for this project; their songs and artists are invented.
       </p>
       <p className="colophon-actions">
-        <ConfirmButton confirm="Put the three demo days back as they were?" onConfirm={() => restoreDemos()}>
+        <ConfirmButton confirm="Put the three demo days back as they were?" onConfirm={() => restoreDemos().then(() => toast('The demo days are back.'))}>
           Restore demo days
         </ConfirmButton>
         <ConfirmButton
           className="danger"
           confirm="Erase every memory, photo and letter on this device? This cannot be undone."
-          onConfirm={() => eraseEverything()}
+          onConfirm={() => eraseEverything().then(() => toast('Everything on this device was erased.'))}
         >
           Erase everything
         </ConfirmButton>

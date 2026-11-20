@@ -40,4 +40,13 @@ export const db = {
   del: (store: StoreName, key: string) => tx(store, 'readwrite', (s) => s.delete(key)),
   all: <T>(store: StoreName) => tx<T[]>(store, 'readonly', (s) => s.getAll()),
   clear: (store: StoreName) => tx(store, 'readwrite', (s) => s.clear()),
+  keys: (store: StoreName) => tx<IDBValidKey[]>(store, 'readonly', (s) => s.getAllKeys()),
+  /** every [key, value] pair in a store, in key order */
+  entries: async <T>(store: StoreName): Promise<[string, T][]> => {
+    const [keys, values] = await Promise.all([
+      tx<IDBValidKey[]>(store, 'readonly', (s) => s.getAllKeys()),
+      tx<T[]>(store, 'readonly', (s) => s.getAll()),
+    ])
+    return keys.map((k, i) => [String(k), values[i]])
+  },
 }

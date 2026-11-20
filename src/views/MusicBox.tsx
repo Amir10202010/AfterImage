@@ -16,6 +16,7 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 const CW = 26 // px per step
 const RH = 15 // px per tooth
 const PLAY_X = 96
+const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
 /** Pointer capture keeps a drag going outside the element; it must never block the gesture. */
 function capture(e: React.PointerEvent) {
@@ -247,6 +248,18 @@ export default function MusicBox({ ym }: { ym?: string }) {
 
       <section className="mb-box" aria-label="The music box">
         <div className="mb-velvet">
+          {['tl', 'tr', 'bl', 'br'].map((c) => (
+            <span key={c} className={`mb-screw mb-screw-${c}`} aria-hidden="true" />
+          ))}
+          <div className="mb-plate" aria-hidden="true">
+            <span>№ {String(m).padStart(2, '0')}</span>
+            <b>
+              {MONTHS[m - 1]} {y}
+            </b>
+            <span>
+              day {day} of {nDays}
+            </span>
+          </div>
           <div
             className="mb-window"
             ref={stripEl}
@@ -274,11 +287,17 @@ export default function MusicBox({ ym }: { ym?: string }) {
           >
             <div className="mb-strip" style={{ width: cols * CW + 60, transform: `translateX(${PLAY_X - pos * CW}px)` } as CSSProperties}>
               {Array.from({ length: nDays }, (_, i) => {
-                const d = days.get(`${month}-${String(i + 1).padStart(2, '0')}`)
+                const iso = `${month}-${String(i + 1).padStart(2, '0')}`
+                const d = days.get(iso)
                 const p = d ? dayPhotos(d)[0] : undefined
+                const wd = new Date(y, m - 1, i + 1).getDay()
+                const cls = ['mb-daycol', d && 'has', (wd === 0 || wd === 6) && 'is-weekend', wd === 1 && 'is-monday', i + 1 === day && 'is-now', iso === todayISO() && 'is-today', i + 1 < day && 'is-played']
                 return (
-                  <div key={i} className={`mb-daycol ${d ? 'has' : ''}`} style={{ left: i * STEPS_PER_DAY * CW, width: STEPS_PER_DAY * CW }}>
-                    <span className="mb-daynum">{i + 1}</span>
+                  <div key={i} className={cls.filter(Boolean).join(' ')} style={{ left: i * STEPS_PER_DAY * CW, width: STEPS_PER_DAY * CW }}>
+                    <span className="mb-daynum">
+                      <b>{i + 1}</b>
+                      <i>{WEEKDAYS[wd]}</i>
+                    </span>
                     {p && (
                       <span className="mb-thumb">
                         <ScrapPhoto refId={p.ref} negative={p.negative} variant="cell" thumb />
@@ -289,16 +308,42 @@ export default function MusicBox({ ym }: { ym?: string }) {
               })}
               {[...holes].map((h) => {
                 const { col, row } = parseHole(h)
-                return <span key={h} className={`mb-hole ${col < Math.floor(pos) ? 'is-past' : ''}`} style={{ left: col * CW + CW / 2 - 6, top: 22 + (ROWS - 1 - row) * RH + 2 }} />
+                const past = col < Math.floor(pos)
+                // the hole that just crossed the comb still glows for a moment
+                const ringing = past && pos - col < 1.6
+                return (
+                  <span
+                    key={h}
+                    className={`mb-hole ${past ? 'is-past' : ''} ${ringing ? 'is-ringing' : ''}`}
+                    style={{ left: col * CW + CW / 2 - 6, top: 22 + (ROWS - 1 - row) * RH + 2, '--o': Math.floor(row / 5) } as CSSProperties}
+                  />
+                )
               })}
             </div>
+            {/* the comb, drawn as a little keyboard: one key per tooth, C of each octave marked */}
             <div className="mb-comb" aria-hidden="true">
+              <span className="mb-comb-head">
+                <i>keys</i>
+              </span>
               {Array.from({ length: ROWS }, (_, i) => {
                 const row = ROWS - 1 - i
-                return <span key={row} className={`mb-tooth ${Date.now() - (lit[row] ?? 0) < 220 ? 'is-lit' : ''}`} style={{ top: 22 + i * RH + 4 }} />
+                const lit_ = Date.now() - (lit[row] ?? 0) < 220
+                return (
+                  <span
+                    key={row}
+                    className={`mb-tooth ${lit_ ? 'is-lit' : ''} ${row % 5 === 0 ? 'is-c' : ''}`}
+                    style={{ top: 22 + i * RH, '--len': 1 - row / (ROWS * 3.2), '--o': Math.floor(row / 5) } as CSSProperties}
+                  >
+                    <em>{rowName(row)}</em>
+                  </span>
+                )
               })}
             </div>
-            <span className="mb-line" aria-hidden="true" />
+            <span className="mb-line" aria-hidden="true">
+              <i />
+            </span>
+            <span className="mb-glass" aria-hidden="true" />
+            <span className="mb-progress" aria-hidden="true" style={{ transform: `scaleX(${cols ? pos / cols : 0})` }} />
           </div>
 
           <div
