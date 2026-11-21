@@ -4,12 +4,32 @@ export type Cover = 'leaves' | 'dust' | 'static'
 export type BathId = 'surface' | 'sequence' | 'recall' | 'ledger' | 'meeting'
 export type Stamp = 'kept' | 'changed' | 'let-go' | 'trying'
 
-export interface Song {
+export type Mode = 'major' | 'minor'
+
+/**
+ * What is known about a song beyond its name: typed by the user, measured from their own
+ * audio file, or both. Every field is optional, so older memories keep working unchanged.
+ */
+export interface MusicMeta {
+  bpm?: number
+  /** whether the bpm was measured from the user's own audio file or typed in */
+  bpmSource?: 'measured' | 'typed'
+  /** 0 = whisper, 1 = wall of sound */
+  energy?: number
+  mode?: Mode
+  genre?: string
+  year?: number
+  /** free description: "slow sad piano from the 60s" */
+  description?: string
+}
+
+export interface Song extends MusicMeta {
   title: string
   artist: string
   url?: string
   /** id of a user-uploaded audio blob */
   audioId?: string
+  /** how it felt — always set; the fallback when no bpm is known */
   tempo: Tempo
 }
 

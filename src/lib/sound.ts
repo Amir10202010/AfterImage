@@ -7,7 +7,8 @@ export const BPM: Record<Tempo, number> = { slow: 72, mid: 96, fast: 124 }
 
 const midi = (n: number) => 440 * Math.pow(2, (n - 69) / 12)
 
-type Profile = { tempo: Tempo; seed: string }
+/** bpm, when known (measured or typed), replaces the tempo's default beat */
+type Profile = { tempo: Tempo; seed: string; bpm?: number }
 
 class Soundscape {
   private ctx?: AudioContext
@@ -75,7 +76,7 @@ class Soundscape {
   private schedule() {
     const ctx = this.ctx!
     const p = this.profile!
-    const spb = 60 / BPM[p.tempo]
+    const spb = 60 / (p.bpm ?? BPM[p.tempo])
     while (this.nextBeat < ctx.currentTime + 0.2) {
       this.play(this.beat, this.nextBeat, spb, p)
       this.nextBeat += spb

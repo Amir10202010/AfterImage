@@ -28,7 +28,7 @@ export interface BathProps {
 }
 
 export function memoryStyle(m: Memory): CSSProperties {
-  const bpm = BPM[m.song?.tempo ?? 'slow']
+  const bpm = m.song?.bpm ?? BPM[m.song?.tempo ?? 'slow']
   return { '--accent': accentFor(m), '--beat': `${60 / bpm}s`, '--rock': `${(60 / bpm) * 8}s` } as CSSProperties
 }
 
@@ -163,7 +163,7 @@ export function SoundToggle({ m }: { m: Memory }) {
     if (audioUrl && audio.current) {
       audio.current.volume = 0.6
       audio.current.play().catch(() => setOn(false))
-    } else sound.start({ tempo: m.song?.tempo ?? 'slow', seed: m.song ? m.song.title + m.song.artist : m.id })
+    } else sound.start({ tempo: m.song?.tempo ?? 'slow', bpm: m.song?.bpm, seed: m.song ? m.song.title + m.song.artist : m.id })
     setOn(true)
   }, [audioUrl, m.id, m.song])
 

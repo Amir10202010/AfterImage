@@ -9,7 +9,8 @@
 //
 // What never changes from day to day lives in CONSTANTS below; it is what makes
 // a feed of days look like one person's diary.
-import type { Memory, Song, Tempo } from './types'
+import type { Memory, Mode, MusicMeta, Song } from './types'
+import { BPM } from './sound'
 import type { Swatch } from './colors'
 import { extractRecall, norm, sentences } from './extract'
 
@@ -33,24 +34,8 @@ export const CONSTANTS = {
 /* music: what we know (or can guess) about the song                   */
 /* ------------------------------------------------------------------ */
 
-export type Mode = 'major' | 'minor'
+export type { Mode, MusicMeta }
 export type GenreFamily = 'acoustic' | 'classical' | 'jazz' | 'folk' | 'electronic' | 'rock' | 'pop' | 'hiphop' | 'ambient'
-
-/** Extra facts about a song: typed by the user, read from the audio, or both. */
-export interface MusicMeta {
-  bpm?: number
-  /** whether the bpm was read from the user's own audio file or typed in */
-  bpmSource?: 'measured' | 'typed'
-  /** 0 = whisper, 1 = wall of sound */
-  energy?: number
-  mode?: Mode
-  genre?: string
-  year?: number
-  /** free description: "slow sad piano from the 60s" */
-  description?: string
-}
-
-export const TEMPO_BPM: Record<Tempo, number> = { slow: 72, mid: 96, fast: 124 }
 
 /** A regex that matches at the start of a word in any script (\b only knows ASCII). */
 const W = (src: string) => new RegExp(`(?<!\\p{L})(?:${src})`, 'u')
@@ -81,13 +66,13 @@ export interface MusicSignals {
   source: { bpm: 'measured' | 'typed' | 'tempo'; mode: 'typed' | 'guessed' | 'unknown' }
 }
 
-export function musicSignals(song?: Song & MusicMeta): MusicSignals | undefined {
+export function musicSignals(song?: Song): MusicSignals | undefined {
   if (!song) return undefined
   // genre and key only from what was said about the song: a title like "Lake House" is not a genre,
   // and "Blue Suede Shoes" is not in a minor key
   const text = norm([song.genre, song.description].filter(Boolean).join(' '))
   const genre = text ? GENRES.find(([, re]) => re.test(text))?.[0] : undefined
-  const bpm = song.bpm && song.bpm > 30 && song.bpm < 240 ? Math.round(song.bpm) : TEMPO_BPM[song.tempo ?? 'slow']
+  const bpm = song.bpm && song.bpm > 30 && song.bpm < 240 ? Math.round(song.bpm) : BPM[song.tempo ?? 'slow']
   const baseEnergy = { slow: 0.28, mid: 0.55, fast: 0.85 }[song.tempo ?? 'slow']
   const genreEnergy: Partial<Record<GenreFamily, number>> = { electronic: 0.12, rock: 0.15, hiphop: 0.08, ambient: -0.18, classical: -0.1, acoustic: -0.08, folk: -0.05 }
   const energy = clamp(song.energy ?? baseEnergy + (genre ? (genreEnergy[genre] ?? 0) : 0), 0, 1)
@@ -218,7 +203,7 @@ function firstTime(m: Pick<Memory, 'time' | 'moments'>) {
   return m.time ?? m.moments.find((x) => x.time && /^\d\d:\d\d$/.test(x.time))?.time
 }
 
-export type DayInput = Pick<Memory, 'story' | 'date' | 'people' | 'moments'> & Partial<Pick<Memory, 'time' | 'mood' | 'weather' | 'location' | 'title'>> & { song?: Song & MusicMeta }
+export type DayInput = Pick<Memory, 'story' | 'date' | 'people' | 'moments'> & Partial<Pick<Memory, 'time' | 'mood' | 'weather' | 'location' | 'title'>> & { song?: Song }
 
 export function readSignals(m: DayInput, swatches?: Swatch[]): DaySignals {
   const all = [m.story, m.mood, m.weather, m.location].filter(Boolean).join(' ')
