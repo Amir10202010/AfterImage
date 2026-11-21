@@ -6,6 +6,9 @@ import Photo, { fadeOf } from '../components/Photo'
 import { AppVoice, Back, ConfirmButton, PastLabel, StampMark, StampSet } from '../components/common'
 import { LetterReader, ReadLetter, ReplyComposer, SealedLetter, markOpened } from '../components/Conversation'
 import { SoundToggle, memoryStyle } from './Darkroom'
+import DayCard from '../components/DayCard'
+import { useDayCard } from '../components/useDayCard'
+import WhyPanel from '../components/WhyPanel'
 import { go } from '../App'
 
 export default function Print({ id }: { id: string }) {
@@ -60,6 +63,8 @@ function PrintPage({ m, letters }: { m: Memory; letters: Letter[] }) {
           </ConfirmButton>
         </nav>
       </header>
+
+      <DaySheet m={m} />
 
       <section className="print-hero">
         <div className="print-photo-wrap">
@@ -122,7 +127,6 @@ function PrintPage({ m, letters }: { m: Memory; letters: Letter[] }) {
                 <span className="record-title">{m.song.title}</span>
                 <span className="record-artist">{m.song.artist}</span>
                 <div className="row">
-                  <SoundToggle m={m} />
                   {m.song.url && (
                     <a className="link" href={m.song.url} target="_blank" rel="noreferrer noopener">
                       Open the song ↗
@@ -280,6 +284,25 @@ function PrintPage({ m, letters }: { m: Memory; letters: Letter[] }) {
       </section>
       <SaveCopy m={m} />
     </main>
+  )
+}
+
+/**
+ * The memory of the day as one card, and beside it why it looks the way it does.
+ * The song's player lives here, so the card's rhythm and the music start together.
+ */
+function DaySheet({ m }: { m: Memory }) {
+  const card = useDayCard(m)
+  return (
+    <section className="day-sheet" aria-label="The memory card">
+      <div className="day-sheet-card">
+        <DayCard m={m} card={card} />
+        <div className="day-sheet-controls">
+          <SoundToggle m={m} />
+        </div>
+      </div>
+      <WhyPanel card={card} />
+    </section>
   )
 }
 
