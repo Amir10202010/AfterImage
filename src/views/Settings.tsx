@@ -140,33 +140,18 @@ export default function Settings() {
   }
 
   const pct = store && store.quota ? Math.max(1.5, Math.min(100, (store.used / store.quota) * 100)) : 0
-  const counts: [number | string, string][] = [
-    [memories.length, memories.length === 1 ? 'memory' : 'memories'],
-    [shoebox.length, shoebox.length === 1 ? 'photo' : 'photos'],
-    [letters.length, letters.length === 1 ? 'letter' : 'letters'],
-    [store ? bytes(store.used) : '—', 'on this device'],
-  ]
 
   return (
     <main className="paper app-page set-page">
       <header className="set-head">
-        <div>
-          <p className="kicker">Afterimage</p>
-          <h1 className="page-title">Settings</h1>
-        </div>
-        <button type="button" className="set-close" onClick={closeSettings} aria-label="Close settings">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 6l12 12M18 6L6 18" />
-          </svg>
-          <kbd>Esc</kbd>
-        </button>
+        <h1 className="page-title">Settings</h1>
       </header>
 
       <section className="set-hero" aria-label="On this device">
         <div className="set-hero-top">
           <span className="set-hero-k">
             <Icon name="shield" />
-            Everything lives in this browser. Nothing is uploaded — unless you set up The Stranger below.
+            Everything stays in this browser. Nothing is uploaded.
           </span>
           {store &&
             (store.persisted ? (
@@ -177,14 +162,12 @@ export default function Settings() {
               </button>
             ))}
         </div>
-        <ul className="set-counts">
-          {counts.map(([n, l]) => (
-            <li key={l}>
-              <b>{n}</b>
-              <span>{l}</span>
-            </li>
-          ))}
-        </ul>
+        {store && (
+          <p className="set-used">
+            {bytes(store.used)} on this device · {memories.length} {memories.length === 1 ? 'memory' : 'memories'} · {shoebox.length} photos · {letters.length}{' '}
+            {letters.length === 1 ? 'letter' : 'letters'}
+          </p>
+        )}
         {store && store.quota > 0 && (
           <div className="set-meter" title={`${bytes(store.used)} of ${bytes(store.quota)}`}>
             <i style={{ width: `${pct}%` }} />
@@ -197,7 +180,7 @@ export default function Settings() {
           Your things
         </h2>
         <ul className="set-card">
-          <Row icon="backup" title="Back up everything" text="One file with every memory, photo, page and letter. It only goes where you move it.">
+          <Row icon="backup" title="Back up everything" text="One file with every memory, photo and letter.">
             <button type="button" className="btn btn-ink btn-sm" onClick={backup} disabled={!!busy}>
               {busy ?? 'Download'}
             </button>
@@ -206,7 +189,7 @@ export default function Settings() {
             icon="restore"
             title="Restore from a backup"
             tone={pending ? 'warn' : undefined}
-            text={pending ? <>This replaces everything here with “{pending.name}”. What’s on this device now will be gone.</> : 'Bring back a backup file — on this phone, or a new one.'}
+            text={pending ? <>This replaces everything here with “{pending.name}”. What’s on this device now will be gone.</> : 'Bring a backup file back, here or on a new device.'}
           >
             {pending ? (
               <>
@@ -236,7 +219,7 @@ export default function Settings() {
               </>
             )}
           </Row>
-          <Row icon="photos" title="Bring in photos" text={`${shoebox.length} in your journal. Add more from your gallery or an Instagram export.`}>
+          <Row icon="photos" title="Bring in photos" text="From your gallery or an Instagram export.">
             <a className="btn btn-ghost-ink btn-sm" href="#/connect">
               Open
             </a>
@@ -246,7 +229,7 @@ export default function Settings() {
 
       <section className="set-group" aria-labelledby="g-stranger" id="stranger">
         <h2 id="g-stranger" className="set-h">
-          The Stranger · AI configuration
+          The Stranger
         </h2>
         <div className="set-card set-stranger">
           <StrangerAI />
@@ -258,22 +241,22 @@ export default function Settings() {
           Getting around
         </h2>
         <ul className="set-card">
-          <Row icon="search" title="Search everything" text={<>Any day, person, place, song, caption or letter. <kbd>Ctrl K</kbd> or <kbd>/</kbd> anywhere.</>}>
+          <Row icon="search" title="Search everything" text={<>Any day, person, place, song or letter. <kbd>Ctrl K</kbd> or <kbd>/</kbd>.</>}>
             <button type="button" className="btn btn-ghost-ink btn-sm" onClick={() => openPalette()}>
               Search
             </button>
           </Row>
-          <Row icon="keys" title="Keyboard shortcuts" text={<><kbd>g</kbd> <kbd>t</kbd> to jump between rooms · <kbd>n</kbd> new day · <kbd>r</kbd> random memory</>}>
+          <Row icon="keys" title="Keyboard shortcuts" text={<><kbd>g</kbd> <kbd>t</kbd> rooms · <kbd>n</kbd> new day · <kbd>r</kbd> random memory</>}>
             <button type="button" className="btn btn-ghost-ink btn-sm" onClick={() => openPalette('keys')}>
               Show
             </button>
           </Row>
-          <Row icon="tour" title="Show the tour again" text="The short walkthrough of where everything lives.">
+          <Row icon="tour" title="Show the tour again" text="Where everything lives, in five steps.">
             <button type="button" className="btn btn-ghost-ink btn-sm" onClick={replayTour}>
               Show
             </button>
           </Row>
-          <Row icon="about" title="About Afterimage" text="The front page — what this is and why.">
+          <Row icon="about" title="About Afterimage" text="What this is, and why.">
             <a className="btn btn-ghost-ink btn-sm" href="#/welcome">
               Open
             </a>
@@ -287,8 +270,7 @@ export default function Settings() {
         </h2>
         <div className="set-card set-danger">
           <p>
-            The three demo days belong to a fictional person; their photographs are illustrations made for this project.
-            Anything the app writes is marked <span className="app-mark">◇</span>.
+            The demo days belong to a fictional person. Anything the app writes is marked <span className="app-mark">◇</span>.
           </p>
           <div className="set-danger-acts">
             <ConfirmButton confirm="Put the three demo days back as they were?" onConfirm={() => restoreDemos().then(() => toast('The demo days are back.'))}>

@@ -142,7 +142,7 @@ function Enlarger({ a, b }: { a: Memory; b: Memory }) {
     <main className={`darkroom theme-${a.theme} double`}>
       <header className="dr-head">
         <Back href="#/double" dark>
-          Choose other days
+          Other days
         </Back>
         <div className="dr-title">
           <span className="dr-date">Double exposure · {apart.toLocaleString()} days apart</span>

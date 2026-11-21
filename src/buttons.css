@@ -1,101 +1,13 @@
-/* ===================== buttons: soft pills instead of square boxes ===================== */
+/* ===================== buttons: soft pills (colours and motion live in system.css) ===================== */
 .btn {
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
   justify-content: center;
-  border-radius: 999px;
   padding: 12px 24px;
   letter-spacing: 0.005em;
-  transition:
-    background 0.3s var(--ease),
-    color 0.3s var(--ease),
-    border-color 0.3s var(--ease),
-    box-shadow 0.3s var(--ease),
-    transform 0.25s var(--ease);
 }
 .btn-sm {
   padding: 8px 16px;
   min-height: 36px;
-}
-.btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-.btn:active:not(:disabled) {
-  transform: translateY(1px) scale(0.985);
-  transition-duration: 0.08s;
-}
-.btn:focus-visible {
-  outline: 2px solid var(--terra);
-  outline-offset: 3px;
-}
-
-/* a slow sheen that passes over the filled buttons on hover */
-.btn-ink::after,
-.btn-light::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.22) 48%, transparent 66%);
-  transform: translateX(-120%);
-  transition: transform 0.7s var(--ease);
-  pointer-events: none;
-}
-.btn-ink:hover:not(:disabled)::after,
-.btn-light:hover:not(:disabled)::after {
-  transform: translateX(120%);
-}
-
-/* filled: warm ink with a soft lift */
-.btn-ink {
-  background: linear-gradient(180deg, #3a332d, var(--ink));
-  color: var(--paper);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.12) inset,
-    0 8px 18px -10px rgba(23, 17, 13, 0.7);
-}
-.btn-ink:hover:not(:disabled) {
-  background: linear-gradient(180deg, #8f3a37, var(--burgundy));
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.16) inset,
-    0 12px 24px -12px rgba(122, 46, 46, 0.75);
-}
-
-/* outlined: hairline on paper, fills on hover */
-.btn-ghost-ink {
-  border-color: color-mix(in srgb, var(--ink) 28%, transparent);
-  background: color-mix(in srgb, var(--paper) 65%, transparent);
-  color: var(--ink);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-.btn-ghost-ink:hover:not(:disabled) {
-  border-color: var(--ink);
-  background: var(--ink);
-  color: var(--paper);
-  box-shadow: 0 10px 22px -14px rgba(23, 17, 13, 0.8);
-}
-
-/* on dark rooms */
-.btn-light {
-  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.8);
-}
-.btn-ghost {
-  background: color-mix(in srgb, var(--dr-ink, var(--ink)) 6%, transparent);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-.btn-ghost:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--dr-ink, var(--ink)) 14%, transparent);
-}
-
-.danger-btn,
-.btn-ink.danger-btn {
-  background: linear-gradient(180deg, #8f3a37, var(--burgundy));
-}
-.danger-btn:hover:not(:disabled) {
-  background: linear-gradient(180deg, #a2423e, #8a3333);
 }
 
 /* the "New" button in the top bar keeps its icon snug */
@@ -138,14 +50,4 @@
 }
 .detail-chips + form input {
   border-radius: 999px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .btn,
-  .btn::after {
-    transition: none !important;
-  }
-  .btn:hover:not(:disabled) {
-    transform: none;
-  }
 }

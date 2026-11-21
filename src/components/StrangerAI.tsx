@@ -135,6 +135,11 @@ export function KeysPanel() {
           Add
         </button>
       </div>
+      <details className="sai-more">
+        <summary>How keys are used</summary>
+      <p className="sai-fine">
+        Model: <code>{GEMINI_MODELS[0]}</code>, falling back to <code>{GEMINI_MODELS[1]}</code>.
+      </p>
       <p className="sai-fine">
         Requests take turns: the first uses key 1, the next key 2, and so on round the list — the place is remembered across reloads
         {keys.length > 1 ? <> (next: key {(cursor % keys.length) + 1})</> : null}. Free-tier limits are counted <b>per Google Cloud project</b>, not per key: several keys from one project share one quota, so rotation spreads requests but doesn’t add free quota.
@@ -142,6 +147,7 @@ export function KeysPanel() {
       <p className="sai-fine">
         Keys are stored only in this browser (localStorage) and are never put in backups. Anyone who can open this browser profile or its developer tools can read them — use keys you can revoke, and don’t use a shared computer.
       </p>
+      </details>
     </div>
   )
 }
@@ -194,7 +200,7 @@ export function ProfilePanel() {
           {stale?.stale && <p className="sai-fine is-warn">{stale.fresh} passages were written since — refresh to fold them in.</p>}
         </>
       ) : (
-        <p className="sai-p">Not built yet. Gemini reads a spread of your writing once and keeps a description of how you write on this device. Rounds never re-read the archive.</p>
+        <p className="sai-p">Not built yet. Gemini reads your writing once and keeps a description of how you write, on this device.</p>
       )}
       {busy === 'profile' && <p className="sai-progress">{progress ?? 'Working…'}</p>}
       <div className="sai-acts">
@@ -224,7 +230,7 @@ export function QueuePanel() {
     <div className="sai-block">
       <h3 className="sai-h">Impostors waiting</h3>
       <p className="sai-p">
-        {open} unused {open === 1 ? 'line' : 'lines'} ready · {queue.length - open} already played. Lines are written {BATCH} at a time and topped up in the background when fewer than four are left, so rounds don’t wait on Gemini.
+        {open} {open === 1 ? 'line' : 'lines'} ready · {queue.length - open} played. Topped up in the background, so rounds never wait.
       </p>
       {busy === 'lines' && <p className="sai-progress">Writing new lines…</p>}
       <div className="sai-acts">
@@ -274,8 +280,9 @@ export default function StrangerAI() {
   return (
     <div className="sai">
       <p className="sai-p">
-        The Stranger mixes five passages you wrote with one Gemini wrote in your style. Model: <code>{GEMINI_MODELS[0]}</code> (falls back to <code>{GEMINI_MODELS[1]}</code>). Nothing here is needed for the rest of Afterimage, which stays offline.
+        Five passages you wrote, one Gemini wrote in your style. Only this game goes online.
       </p>
+
       <LastError />
       <KeysPanel />
       <ConsentPanel />

@@ -147,7 +147,7 @@ function PrintPage({ m, letters }: { m: Memory; letters: Letter[] }) {
 
         <aside className="margin">
           <h2 className="margin-h">What I remember now</h2>
-          {m.margin.length === 0 && <AppVoice>Is there something the story left out? Write it in the margin — it’ll be dated today.</AppVoice>}
+          {m.margin.length === 0 && <AppVoice>Something the story left out? It’ll be dated today.</AppVoice>}
           <ul className="margin-notes">
             {m.margin.map((n) => (
               <li key={n.id} className="present">
@@ -307,7 +307,7 @@ function SaveCopy({ m }: { m: Memory }) {
   return (
     <footer className="print-foot">
       <button type="button" className="link" onClick={download}>
-        Save the words of this day as a text file
+        Save as text
       </button>
     </footer>
   )

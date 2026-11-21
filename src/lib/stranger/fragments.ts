@@ -133,6 +133,5 @@ export function extractFragments(a: Archive, opts: { includeDemo?: boolean; now?
 /** What the user would need to add for a game, in plain words. */
 export function shortfall(count: number, need = 5) {
   if (count >= need) return null
-  const missing = need - count
-  return `The Stranger needs at least ${need} passages you wrote — sentences of ${MIN_WORDS} words or more. It found ${count}. Save ${missing === 1 ? 'one more day' : 'a few more days'} with a story of a few sentences, write a letter, or bring in Instagram posts with captions.`
+  return `The Stranger needs at least ${need} passages you wrote, each ${MIN_WORDS} words or more. It found ${count} so far.`
 }

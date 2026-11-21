@@ -3,7 +3,6 @@ import { useStore } from '../lib/store'
 import { dayIndex, dayPhotos, dayWords, monthKey, type Day } from '../lib/journal'
 import { hash } from '../lib/extract'
 import { todayISO } from '../lib/time'
-import { Back } from '../components/common'
 import { OptionalImg, ScrapPhoto, Sticker } from '../components/Scrap'
 import { go } from '../App'
 import { playPageTurn } from '../lib/pageTurn'
@@ -52,25 +51,13 @@ export default function Journal({ ym }: { ym?: string }) {
 
   return (
     <main className="paper journal">
-      <header className="print-bar">
-        <Back href="#/today">Today</Back>
-        <nav className="print-actions" aria-label="Journal">
-          <a className="link" href={`#/music/${current}`}>
-            ♪ Play this month
-          </a>
-          <a className="link" href="#/connect">
-            Connect photos
-          </a>
-        </nav>
-      </header>
-
       <div className="journal-head">
         <div>
           <p className="kicker">The journal</p>
           <h1 className="print-title">Every day you kept a picture of.</h1>
         </div>
         <p className="section-meta">
-          {shoebox.length} photos · {days.size} days · tap a day to open its page
+          {shoebox.length} photos · {days.size} days · <a href="#/connect">add photos</a>
         </p>
       </div>
 

@@ -147,7 +147,7 @@
 }
 .st-stats {
   display: grid;
-  grid-template-columns: repeat(4, auto);
+  grid-template-columns: repeat(3, auto);
   gap: 0;
   margin: 22px 0 0;
   border-top: 1px solid var(--dr-rule);

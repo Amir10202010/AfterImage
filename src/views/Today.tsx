@@ -72,7 +72,7 @@ export default function Today() {
       video: 'letter',
       kicker: 'A letter arrived',
       title: `From you, written in ${monthYear(l.writtenAt)}.`,
-      text: `Sealed ${ago(l.writtenAt)}${m ? ` on “${m.title}”` : ''}. It has been waiting for today.`,
+      text: `Sealed ${ago(l.writtenAt)}${m ? ` on “${m.title}”` : ''}.`,
       cta: 'Open the letter',
       href: `#/arrival/${l.id}`,
     }
@@ -91,7 +91,7 @@ export default function Today() {
       video: 'line',
       kicker: 'All developed',
       title: 'Save today, before it fades.',
-      text: 'Everything on your line has been developed. Write down today — future you will develop it.',
+      text: 'Everything is developed. Write down today.',
       cta: 'Save today',
       href: '#/new',
     }
@@ -138,7 +138,6 @@ export default function Today() {
         <section className="section" aria-labelledby="rituals-h">
           <div className="section-head">
             <h2 id="rituals-h">Small rituals</h2>
-            <p className="section-meta">A minute each</p>
           </div>
           <Rituals memories={memories} exposures={exposures} today={today} />
         </section>
@@ -158,9 +157,10 @@ function MemoryHint({ memories }: { memories: Memory[] }) {
     return d.getFullYear() !== t.getFullYear() && Math.abs(d.getMonth() * 31 + d.getDate() - (t.getMonth() * 31 + t.getDate())) <= 4
   })
   if (!match) return null
+  const years = t.getFullYear() - new Date(match.date + 'T12:00').getFullYear()
   return (
     <a className="on-this-day" href={`#/print/${match.id}`}>
-      <span className="kicker">This week, {t.getFullYear() - new Date(match.date).getFullYear()} years ago</span>
+      <span className="kicker">This week, {years === 1 ? 'a year' : `${years} years`} ago</span>
       <span className="on-this-day-title">{match.title}</span>
     </a>
   )

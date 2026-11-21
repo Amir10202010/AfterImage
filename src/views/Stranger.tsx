@@ -83,7 +83,6 @@ function Entry({ onPlay }: { onPlay: () => void }) {
           <i key={i} style={{ animationDelay: `${i * 90}ms` }} />
         ))}
       </div>
-      <p className="st-kicker">A game you can play as long as you like</p>
       <h1 className="st-title">Find the one who isn’t you.</h1>
       <p className="st-sub">Five fragments from your past. One that never happened.</p>
       {ready && (
@@ -91,7 +90,7 @@ function Entry({ onPlay }: { onPlay: () => void }) {
           <button type="button" className="st-play" onClick={onPlay}>
             Play Stranger
           </button>
-          <p className="st-fine">Six frames, three accusations. Hold a frame to accuse it. Another round is always one press away.</p>
+          <p className="st-fine">Hold a frame to accuse it. Three tries.</p>
         </>
       )}
       {st.played > 0 && (
@@ -103,10 +102,6 @@ function Entry({ onPlay }: { onPlay: () => void }) {
           <div>
             <dt>Found</dt>
             <dd>{st.found}</dd>
-          </div>
-          <div>
-            <dt>Avg. accusations</dt>
-            <dd>{st.avgAttempts.toFixed(1)}</dd>
           </div>
           <div>
             <dt>Recognition</dt>
@@ -151,7 +146,7 @@ function Setup({ blockers: b }: { blockers: Blocker[] }) {
               Write a letter
             </a>
             <a className="btn btn-ghost btn-sm" href="#/connect">
-              Bring in Instagram captions
+              Bring in captions
             </a>
           </div>
           {!s.prefs.includeDemo && withDemo >= REAL_PER_ROUND && (
@@ -160,7 +155,7 @@ function Setup({ blockers: b }: { blockers: Blocker[] }) {
               <button type="button" className="link" onClick={() => setPrefs({ includeDemo: true })}>
                 Practise on the demo archive
               </button>{' '}
-              — it belongs to a fictional person, and every reveal says so.
+              — a fictional person’s days.
             </p>
           )}
         </div>

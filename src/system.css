@@ -1,0 +1,303 @@
+/* ==========================================================================
+   Afterimage — the shared system.
+   Loaded last. Every room keeps its own character (paper, darkroom, the game,
+   the music box), but they all draw from these tokens and these few atoms.
+   ========================================================================== */
+
+:root {
+  /* spacing: one scale, used everywhere */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 72px;
+
+  /* radii: photographs and paper stay square; controls are soft */
+  --r-xs: 2px; /* prints, negatives, paper */
+  --r-sm: 8px; /* inputs, small surfaces */
+  --r-md: 14px; /* cards, popovers, toasts */
+  --r-lg: 20px; /* sheets, dialogs */
+  --r-pill: 999px; /* buttons, chips */
+
+  /* type scale */
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-ui: 14px;
+  --fs-body: 16px;
+  --fs-lead: 19px;
+  --fs-h3: 22px;
+  --fs-h2: clamp(26px, 3vw, 32px);
+  --fs-h1: clamp(38px, 5.4vw, 60px);
+  --measure: 62ch;
+
+  /* motion: things settle, they don't bounce */
+  --dur-fast: 0.15s;
+  --dur: 0.25s;
+  --dur-slow: 0.5s;
+
+  /* depth: two levels, both soft */
+  --shadow-1: 0 1px 2px rgba(38, 34, 30, 0.06), 0 6px 16px -10px rgba(38, 34, 30, 0.25);
+  --shadow-2: 0 2px 6px rgba(38, 34, 30, 0.08), 0 30px 60px -30px rgba(23, 17, 13, 0.45);
+
+  --focus: color-mix(in srgb, var(--burgundy) 70%, transparent);
+}
+
+/* ---------- focus: one ring, everywhere ---------- */
+:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* ---------- type ---------- */
+.kicker {
+  font: 600 11px/1.2 var(--sans);
+  letter-spacing: 0.16em;
+  margin-bottom: var(--s-2);
+}
+.page-title,
+.letters-head .print-title,
+.journal-head .print-title {
+  font: 500 var(--fs-h1) / 1.02 var(--serif);
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.section {
+  margin-top: var(--s-7);
+}
+.section-head {
+  border-bottom-color: var(--rule);
+  padding-bottom: var(--s-2);
+  margin-bottom: var(--s-5);
+}
+.section-head h2 {
+  font: 500 var(--fs-h2) / 1.1 var(--serif);
+}
+.section-meta {
+  font-size: var(--fs-sm);
+  color: var(--ink-3);
+}
+.section-meta a {
+  color: var(--ink-2);
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+}
+.section-meta a:hover {
+  color: var(--ink);
+}
+
+/* every top-level page opens the same way: kicker, title, one quiet line */
+.page-head,
+.today-head,
+.letters-head,
+.journal-head,
+.set-head {
+  padding-top: var(--s-6);
+}
+.letters-head .section-meta,
+.journal-head .section-meta {
+  margin-top: var(--s-2);
+}
+
+/* ---------- buttons: flat, warm, quiet ---------- */
+.btn {
+  border-radius: var(--r-pill);
+  font: 500 var(--fs-ui) / 1 var(--sans);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition:
+    background var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+.btn-sm {
+  font-size: var(--fs-sm);
+}
+.btn:hover:not(:disabled) {
+  transform: none;
+}
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.btn-ink {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: none;
+}
+.btn-ink:hover:not(:disabled) {
+  background: var(--burgundy);
+  box-shadow: none;
+}
+.btn-ghost-ink {
+  border-color: color-mix(in srgb, var(--ink) 22%, transparent);
+  background: transparent;
+  color: var(--ink);
+}
+.btn-ghost-ink:hover:not(:disabled) {
+  border-color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+  color: var(--ink);
+  box-shadow: none;
+}
+.btn-light {
+  box-shadow: none;
+}
+.btn-ghost {
+  background: transparent;
+}
+.btn-ghost:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--dr-ink, var(--ink)) 8%, transparent);
+}
+.danger-btn,
+.btn-ink.danger-btn {
+  background: var(--burgundy);
+}
+.danger-btn:hover:not(:disabled) {
+  background: #8a3333;
+}
+
+/* text links: one underline style */
+.link {
+  font-size: var(--fs-ui);
+  text-underline-offset: 4px;
+  transition: color var(--dur-fast) var(--ease);
+}
+
+/* chips: same height and rhythm as small buttons */
+.chip {
+  min-height: 34px;
+  padding: 6px 14px;
+  font-size: var(--fs-sm);
+  border-radius: var(--r-pill);
+  transition:
+    background var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+
+/* ---------- inputs ---------- */
+.field input,
+.field select,
+.picker select,
+.review input,
+.detail-chips + form input,
+.sai-input {
+  border-radius: var(--r-sm);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.field input:focus,
+.field select:focus,
+.review input:focus,
+.sai-input:focus {
+  border-color: var(--ink-2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 8%, transparent);
+}
+.field > span:first-child {
+  letter-spacing: 0.12em;
+}
+
+/* ---------- the frame: solid paper, no glass ---------- */
+.topbar {
+  background: var(--ivory);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.topnav {
+  background: transparent;
+  border-color: transparent;
+}
+.nav-item {
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.nav-item:hover:not(.is-on) {
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+.brand-mark {
+  box-shadow: none;
+}
+/* between phone and laptop the bar gets tight: the brand keeps only its mark */
+@media (min-width: 761px) and (max-width: 980px) {
+  .brand-word {
+    display: none;
+  }
+  .nav-item {
+    padding-inline: 12px;
+  }
+}
+@media (max-width: 760px) {
+  .tabbar {
+    background: var(--paper);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* ---------- overlays: sheet, palette, toasts, tips ---------- */
+.sheet {
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-2);
+}
+.sheet-option {
+  border-radius: var(--r-md);
+}
+.sheet-ico {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-md);
+  background: var(--ivory);
+  color: var(--ink);
+}
+.sheet-option b {
+  font-size: 21px;
+}
+.toast {
+  border-radius: var(--r-md);
+}
+.tip-pop {
+  border-radius: var(--r-md);
+}
+
+/* ---------- small disclosures for fine print ---------- */
+.sai-more {
+  margin-top: var(--s-2);
+}
+.sai-more > summary {
+  cursor: pointer;
+  width: fit-content;
+  font-size: var(--fs-sm);
+  color: var(--ink-3);
+  list-style: none;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+}
+.sai-more > summary::-webkit-details-marker {
+  display: none;
+}
+.sai-more > summary:hover {
+  color: var(--ink);
+}
+.sai-more[open] > summary {
+  margin-bottom: var(--s-2);
+}
+
+/* ---------- comfortable reading ---------- */
+.story-input,
+.letter-input,
+.app-voice,
+.sai-p,
+.set-danger p {
+  max-width: var(--measure);
+}
+
+/* ---------- touch: nothing important lives behind hover ---------- */
+@media (hover: none) {
+  .btn:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+}
