@@ -151,7 +151,7 @@ export default function Palette() {
       { id: 'a-new', group: 'Do', title: 'Save a day', sub: 'Write it down, add photos and the song', icon: '✎', hint: 'n', run: go('/new'), hay: 'save new day write create add memory' },
       { id: 'a-photos', group: 'Do', title: 'Bring in photos', sub: 'Gallery or Instagram export', icon: '⇪', run: go('/connect'), hay: 'bring import photos gallery instagram connect upload' },
       { id: 'a-letter', group: 'Do', title: 'Write to future you', sub: 'Seal a letter until a date', icon: '✉', run: go('/letters?write=future'), hay: 'write letter future seal' },
-      { id: 'a-strip', group: 'Do', title: 'Today’s test strip', sub: 'Guess when you wrote it', icon: '▤', run: go('/strip'), hay: 'test strip game guess quiz' },
+      { id: 'a-stranger', group: 'Do', title: 'Play Stranger', sub: 'Find the one who isn’t you', icon: '▤', run: go('/stranger'), hay: 'stranger game play guess quiz ai gemini test strip' },
       { id: 'a-double', group: 'Do', title: 'The enlarger', sub: 'Lay two days over each other', icon: '◎', run: go('/double'), hay: 'enlarger double exposure two days compare' },
       { id: 'a-music', group: 'Do', title: 'Music box — this month', sub: monthYear(todayISO()), icon: '♪', run: go(`/music/${ym}`), hay: 'music box song tune crank' },
       { id: 'a-random', group: 'Do', title: 'Surprise me', sub: 'Open a random memory', icon: '⟳', hint: 'r', run: () => (window.location.hash = randomMemoryHref(memories).slice(1)), hay: 'random surprise shuffle lucky' },

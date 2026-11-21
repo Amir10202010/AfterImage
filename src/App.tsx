@@ -16,7 +16,7 @@ import Create from './views/Create'
 import Letters from './views/Letters'
 import Arrival from './views/Arrival'
 import Double from './views/Double'
-import Strip from './views/Strip'
+import Stranger from './views/Stranger'
 import Journal from './views/Journal'
 import Spread from './views/Spread'
 import Connect from './views/Connect'
@@ -43,6 +43,11 @@ function useHash() {
     return () => window.removeEventListener('hashchange', on)
   }, [])
   return hash
+}
+
+function StripRedirect() {
+  useEffect(() => window.location.replace('#/stranger'), [])
+  return null
 }
 
 export function go(path: string) {
@@ -99,8 +104,13 @@ export default function App() {
       view = <Print key={arg} id={arg} />
       tab = 'memories'
       break
+    case 'stranger':
+      view = <Stranger />
+      tab = 'today'
+      break
     case 'strip':
-      view = <Strip />
+      // the old daily Test Strip grew into The Stranger; old links land there
+      view = <StripRedirect />
       tab = 'today'
       break
     case 'connect':

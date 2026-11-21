@@ -3,7 +3,8 @@ import { eraseEverything, letterStatus, restoreDemos, updateMemory, useStore } f
 import { ago, longDate, monthYear, until, year } from '../lib/time'
 import type { Exposure, Letter, Memory, Stamp } from '../lib/types'
 import Photo, { fadeOf } from '../components/Photo'
-import { pickStrip, stripGlyphs } from './Strip'
+import { loadStranger, useStranger } from '../lib/stranger/engine'
+import { stats as strangerStats } from '../lib/stranger/game'
 import { connections } from '../lib/connect'
 import { OptionalImg, ScrapPhoto } from '../components/Scrap'
 import { dayIndex, dayPhotos } from '../lib/journal'
@@ -400,8 +401,12 @@ export function Colophon() {
   )
 }
 
-export function Rituals({ memories, exposures, strip, today }: { memories: Memory[]; exposures: Exposure[]; strip?: import('../lib/types').StripResult; today: string }) {
-  const pick = useMemo(() => pickStrip(memories, today), [memories, today])
+export function Rituals({ memories, exposures, today }: { memories: Memory[]; exposures: Exposure[]; today: string }) {
+  const stranger = useStranger()
+  useEffect(() => {
+    loadStranger()
+  }, [])
+  const st = strangerStats(stranger.rounds)
   const best = useMemo(() => {
     let top: { a: Memory; b: Memory; n: number } | null = null
     for (let i = 0; i < memories.length; i++)
@@ -414,31 +419,22 @@ export function Rituals({ memories, exposures, strip, today }: { memories: Memor
       }
     return top
   }, [memories, exposures])
-  const played = strip && pick && strip.memoryId === pick.m.id && strip.sentence === pick.s
   return (
     <section className="today" aria-label="Today">
-      {pick && (
-        <a className="today-card today-strip" href="#/strip">
-          <span className="today-k">Today’s test strip</span>
-          <span className="today-q">“{pick.s.length > 90 ? pick.s.slice(0, 88) + '…' : pick.s}”</span>
-          <span className="today-meta">
-            {played && strip!.done ? (
-              <>
-                <span className="today-glyphs">{stripGlyphs(strip!)}</span> {strip!.solved ? 'found' : 'not this time'} · new one tomorrow
-              </>
-            ) : played ? (
-              `${5 - strip!.guesses.length} exposures left`
-            ) : (
-              'When did you write this? Five exposures to find out.'
-            )}
-          </span>
-          <span className="today-strip-film" aria-hidden="true">
-            {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
-              <i key={i} style={{ opacity: 0.12 + i * 0.11 }} />
-            ))}
-          </span>
-        </a>
-      )}
+      <a className="today-card today-strip" href="#/stranger">
+        <span className="today-k">The Stranger</span>
+        <span className="today-q">Five fragments from your past. One that never happened.</span>
+        <span className="today-meta">
+          {st.played > 0
+            ? `${st.played} ${st.played === 1 ? 'round' : 'rounds'} · ${Math.round(st.rate * 100)}% recognised · play another`
+            : 'Find the one who isn’t you. Play as many rounds as you like.'}
+        </span>
+        <span className="today-strip-film" aria-hidden="true" style={{ gridTemplateColumns: 'repeat(6, 1fr)' }}>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <i key={i} style={{ opacity: i === 3 ? 1 : 0.12 + i * 0.11, background: i === 3 ? 'var(--burgundy)' : undefined }} />
+          ))}
+        </span>
+      </a>
       {memories.length >= 2 && (
         <a className="today-card today-double" href={best && best.n > 0 ? `#/double/${best.a.id}/${best.b.id}` : '#/double'}>
           <span className="today-k">The enlarger</span>
