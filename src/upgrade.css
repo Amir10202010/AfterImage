@@ -505,3 +505,65 @@ kbd {
   font: italic 400 20px var(--serif);
 }
 
+
+/* ---------- a picture drawn from the story ---------- */
+.drawn {
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+}
+.drawn-frame {
+  margin: 0;
+  max-width: 420px;
+  background: #fffdf8;
+  padding: 8px 8px 10px;
+  box-shadow: 0 14px 24px -18px rgba(0, 0, 0, 0.6);
+}
+.drawn-frame img,
+.drawn-empty {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3/2;
+  object-fit: cover;
+  background: var(--cream);
+}
+.drawn-frame.is-drawing img,
+.drawn-frame.is-drawing .drawn-empty {
+  animation: drawn-breathe 2.4s var(--ease) infinite;
+}
+.drawn-frame figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  font: 13px/1.4 var(--sans);
+  color: var(--ink-3, #6b6259);
+}
+.drawn-frame figcaption .link + .link {
+  margin-left: 10px;
+}
+.drawn-err {
+  margin: 0;
+  font: 13px/1.4 var(--sans);
+  color: var(--burgundy);
+}
+.drawn-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 13px/1.4 var(--sans);
+  color: var(--ink-3, #6b6259);
+  cursor: pointer;
+}
+@keyframes drawn-breathe {
+  50% {
+    opacity: 0.55;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .drawn-frame.is-drawing img,
+  .drawn-frame.is-drawing .drawn-empty {
+    animation: none;
+  }
+}

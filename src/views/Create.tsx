@@ -18,6 +18,7 @@ import { todayISO, roman } from '../lib/time'
 import { AppVoice, Back, InfoTip, SealPicker, sealToDate, type SealChoice } from '../components/common'
 import Photo from '../components/Photo'
 import { BATH_NAMES } from './Darkroom'
+import { drawFromWords, drawPref, setDrawPref } from '../lib/imagine'
 
 const STEPS = ['The day', 'What you kept', 'Around it', 'What we noticed', 'A letter forward']
 const WEATHER = ['Sun', 'Cold sun', 'Clouds', 'Rain', 'Snow', 'Wind', 'Heat', 'Fog']
@@ -33,7 +34,11 @@ const THEMES: [Theme, string, string][] = [
   ['night', 'Phosphor', 'A screen at night, static to wipe'],
 ]
 
-type PhotoItem = { id?: string; file?: File; url: string }
+type PhotoItem = { id?: string; file?: File; url: string; drawn?: boolean }
+
+const DRAW_AFTER_MS = 3000
+const DRAW_MIN_WORDS = 12
+const REDRAW_CHARS = 80
 
 async function downscale(file: File): Promise<Blob> {
   if (!file.type.startsWith('image/') || file.type === 'image/gif' || file.type === 'image/svg+xml') return file
@@ -98,6 +103,59 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
   const [letter, setLetter] = useState('')
   const [seal, setSeal] = useState<SealChoice>('develop')
   const [sealDate, setSealDate] = useState('')
+
+  // a picture drawn from the story while it's being written (new days only)
+  const [drawOn, setDrawOn] = useState(() => !editing && drawPref())
+  const [drawing, setDrawing] = useState(false)
+  const [drawErr, setDrawErr] = useState('')
+  const drawnFor = useRef('')
+  const drawAbort = useRef<AbortController | null>(null)
+  const drawnItem = photos.find((p) => p.drawn)
+
+  const drawNow = async () => {
+    drawAbort.current?.abort()
+    const ac = new AbortController()
+    drawAbort.current = ac
+    const words = story.trim()
+    drawnFor.current = words
+    setDrawing(true)
+    setDrawErr('')
+    try {
+      const { blob } = await drawFromWords({ story: words, title: title || undefined, place: location || undefined, time: time || undefined, weather: weather || undefined, mood: mood || undefined, date }, ac.signal)
+      if (ac.signal.aborted) return
+      const item: PhotoItem = { file: new File([blob], 'drawn-from-words.jpg', { type: 'image/jpeg' }), url: URL.createObjectURL(blob), drawn: true }
+      setPhotos((ps) => {
+        for (const p of ps) if (p.drawn) URL.revokeObjectURL(p.url)
+        const rest = ps.filter((p) => !p.drawn)
+        return rest.length ? [...rest, item] : [item]
+      })
+    } catch (e) {
+      if (!ac.signal.aborted) setDrawErr(e instanceof Error ? e.message : String(e))
+    } finally {
+      if (drawAbort.current === ac) setDrawing(false)
+    }
+  }
+
+  const removeDrawn = () => {
+    drawAbort.current?.abort()
+    setDrawing(false)
+    setPhotos((ps) => ps.filter((p) => !p.drawn))
+  }
+
+  // draw once the writer pauses; redraw only when the story has grown or changed a lot
+  useEffect(() => {
+    if (!drawOn || editing) return
+    const words = story.trim()
+    if (words.split(/\s+/).length < DRAW_MIN_WORDS) return
+    const last = drawnFor.current
+    if (last && Math.abs(words.length - last.length) < REDRAW_CHARS && words.slice(0, 200) === last.slice(0, 200)) return
+    const t = window.setTimeout(drawNow, DRAW_AFTER_MS)
+    return () => window.clearTimeout(t)
+    // drawNow reads the latest fields; only the story should restart the timer
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [story, drawOn, editing])
+
+  useEffect(() => () => drawAbort.current?.abort(), [])
 
   const ss = useMemo(() => sentences(story), [story])
   const titles = useMemo(() => suggestTitles(story, location || undefined, date), [story, location, date])
@@ -227,6 +285,55 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
               <textarea className="story-input" rows={12} value={story} onChange={(e) => setStory(e.target.value)} placeholder="We met at the gate at 2pm…" autoFocus />
             </label>
             <p className="count">{story.trim() ? `${story.trim().split(/\s+/).length} words · ${ss.length} sentences` : ''}</p>
+
+            {!editing && (
+              <div className="drawn" aria-live="polite">
+                {(drawing || drawnItem) && (
+                  <figure className={`drawn-frame ${drawing ? 'is-drawing' : ''}`}>
+                    {drawnItem ? <img src={drawnItem.url} alt="A picture drawn from your story" /> : <div className="drawn-empty" />}
+                    <figcaption>
+                      <span>
+                        <span className="app-mark" aria-hidden="true">
+                          ◇
+                        </span>{' '}
+                        {drawing ? 'Drawing a picture from your words…' : 'Drawn from your words, not a photograph. It will be kept with this day.'}
+                      </span>
+                      {drawnItem && !drawing && (
+                        <span>
+                          <button type="button" className="link" onClick={drawNow}>
+                            draw again
+                          </button>
+                          <button type="button" className="link danger" onClick={removeDrawn}>
+                            remove
+                          </button>
+                        </span>
+                      )}
+                    </figcaption>
+                  </figure>
+                )}
+                {drawErr && !drawing && (
+                  <p className="drawn-err">
+                    {drawErr}{' '}
+                    <button type="button" className="link" onClick={drawNow}>
+                      try again
+                    </button>
+                  </p>
+                )}
+                <label className="drawn-toggle">
+                  <input
+                    type="checkbox"
+                    checked={drawOn}
+                    onChange={(e) => {
+                      setDrawOn(e.target.checked)
+                      setDrawPref(e.target.checked)
+                      if (!e.target.checked) drawAbort.current?.abort()
+                    }}
+                  />
+                  Draw a picture from my story as I write{' '}
+                  <InfoTip>Your words are sent to Gemini (to describe the scene) and Pollinations (to draw it). The picture comes back and is kept only on this device.</InfoTip>
+                </label>
+              </div>
+            )}
           </section>
         )}
 
@@ -242,6 +349,7 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
                   {p.url && <img src={p.url} alt={`Photograph ${i + 1}`} />}
                   <figcaption>
                     {i === 0 ? 'the negative' : `frame ${i + 1}`}
+                    {p.drawn && <span className="app-mark" title="Drawn from your words"> ◇ drawn</span>}
                     <span>
                       {i > 0 && (
                         <button type="button" className="link" onClick={() => setPhotos((ps) => [ps[i], ...ps.filter((_, k) => k !== i)])}>

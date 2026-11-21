@@ -21,7 +21,18 @@ npm test
 npm run build
 ```
 
-There's no backend and no API key. Everything (memories, photographs, audio, letters, progress) lives in the browser's IndexedDB on your device.
+Everything (memories, photographs, audio, letters, progress) lives in the browser's IndexedDB on your device.
+
+### Pictures drawn from your words (optional)
+
+While you write a new day, Afterimage can draw a picture of it. The only server code is `api/imagine.ts` (a Vercel function; `npm run dev` serves the same handler locally): Gemini turns the story into a scene description, Pollinations draws it, and the image goes straight back to the browser, which crops off the bottom strip and saves it with the memory on the device. The server stores nothing. The writer can turn it off under the story box.
+
+1. Copy `.env.example` to `.env` and fill in `GEMINI_API_KEYS` (comma separated, rotated per request) and `POLLINATIONS_API_KEY` (`sk_…` from enter.pollinations.ai).
+2. On Vercel, add the same variables in Project Settings → Environment Variables.
+
+Never prefix these with `VITE_`: that would put them in the public bundle.
+
+The starting demo photos come from `PHOTO_PROMPTS.json`: `python scripts/gen_photos.py` fills in any that are missing in `public/demo/`.
 
 ## What's inside
 
