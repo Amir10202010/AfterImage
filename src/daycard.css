@@ -19,6 +19,44 @@
   flex-wrap: wrap;
 }
 
+/* ----- reading aloud ----- */
+.read-aloud {
+  display: grid;
+  gap: 6px;
+}
+.read-icon {
+  width: 14px;
+  text-align: center;
+  font: 700 14px/1 var(--serif);
+}
+.read-btn {
+  max-width: 300px;
+}
+.read-btn .sound-song {
+  max-width: 230px;
+}
+.read-aloud-voice,
+.read-aloud-note {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.dc-title.is-spoken {
+  color: var(--dc-accent);
+  transition: color 0.3s;
+}
+.dc-caption.is-spoken {
+  font-style: normal;
+  opacity: 1;
+  -webkit-line-clamp: 3;
+  animation: dc-say 0.35s var(--ease) both;
+}
+@keyframes dc-say {
+  from {
+    opacity: 0;
+    transform: translateY(0.8cqw);
+  }
+}
+
 /* ----- the card: the constant frame ----- */
 .dc {
   --dc-pad: 6%;

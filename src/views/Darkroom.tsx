@@ -3,7 +3,7 @@ import { updateMemory, useBlobUrl, useStore } from '../lib/store'
 import type { BathId, Memory } from '../lib/types'
 import { longDate, roman } from '../lib/time'
 import { accentFor } from '../lib/prompts'
-import { BPM, setSoundPreferred, sound, soundPreferred } from '../lib/sound'
+import { BPM, DUCK_EVENT, setSoundPreferred, sound, soundPreferred } from '../lib/sound'
 import Photo from '../components/Photo'
 import { Back } from '../components/common'
 import Surface from '../baths/Surface'
@@ -191,6 +191,15 @@ export function SoundToggle({ m }: { m: Memory }) {
   }, [start])
 
   useEffect(() => () => stop(), [stop])
+
+  // step back while the day is being read aloud
+  useEffect(() => {
+    const onDuck = (e: Event) => {
+      if (audio.current) audio.current.volume = (e as CustomEvent<boolean>).detail ? 0.15 : 0.6
+    }
+    window.addEventListener(DUCK_EVENT, onDuck)
+    return () => window.removeEventListener(DUCK_EVENT, onDuck)
+  }, [])
 
   const label = m.song ? `${m.song.title} — ${m.song.artist}` : 'darkroom'
   return (

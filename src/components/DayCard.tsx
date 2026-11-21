@@ -20,7 +20,7 @@ function useReducedMotion() {
  * photo window) is the same for every day; colour, treatment, grain, composition, rhythm and the
  * technique's marks come from the day itself.
  */
-export default function DayCard({ m, card }: { m: Memory; card: CardModel }) {
+export default function DayCard({ m, card, spoken }: { m: Memory; card: CardModel; /** the line being read aloud, shown as a subtitle */ spoken?: string }) {
   const { atm } = card
   const reduce = useReducedMotion()
   const [step, setStep] = useState(0)
@@ -78,8 +78,14 @@ export default function DayCard({ m, card }: { m: Memory; card: CardModel }) {
       <span className="dc-grain" aria-hidden="true" />
 
       <figcaption className="dc-text">
-        <span className="dc-title">{card.title}</span>
-        {card.caption && <span className="dc-caption">“{card.caption}”</span>}
+        <span className={`dc-title ${spoken === card.title ? 'is-spoken' : ''}`}>{card.title}</span>
+        {spoken && spoken !== card.title ? (
+          <span key={spoken} className="dc-caption is-spoken" aria-live="polite">
+            {spoken}
+          </span>
+        ) : (
+          card.caption && <span className="dc-caption">“{card.caption}”</span>
+        )}
       </figcaption>
 
       <div className="dc-foot">

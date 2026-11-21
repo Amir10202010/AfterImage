@@ -9,6 +9,7 @@ import { SoundToggle, memoryStyle } from './Darkroom'
 import DayCard from '../components/DayCard'
 import { useDayCard } from '../components/useDayCard'
 import WhyPanel from '../components/WhyPanel'
+import ReadAloud from '../components/ReadAloud'
 import { go } from '../App'
 
 export default function Print({ id }: { id: string }) {
@@ -293,12 +294,14 @@ function PrintPage({ m, letters }: { m: Memory; letters: Letter[] }) {
  */
 function DaySheet({ m }: { m: Memory }) {
   const card = useDayCard(m)
+  const [spoken, setSpoken] = useState<string>()
   return (
     <section className="day-sheet" aria-label="The memory card">
       <div className="day-sheet-card">
-        <DayCard m={m} card={card} />
+        <DayCard m={m} card={card} spoken={spoken} />
         <div className="day-sheet-controls">
           <SoundToggle m={m} />
+          <ReadAloud story={m.story} card={card} onLine={setSpoken} />
         </div>
       </div>
       <WhyPanel card={card} />

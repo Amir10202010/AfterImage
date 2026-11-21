@@ -544,6 +544,11 @@ export const TITLE_MAX = 7
 
 const isRu = (s: string) => (s.match(/[а-яё]/gi)?.length ?? 0) > (s.match(/[a-z]/gi)?.length ?? 0)
 
+/** The language a text is written in, as far as the folder names and the narration care. */
+export function langOf(s: string): 'ru' | 'en' {
+  return isRu(s) ? 'ru' : 'en'
+}
+
 export function wordCount(s: string) {
   return s.trim().split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length
 }
