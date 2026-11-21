@@ -58,7 +58,7 @@ export function Loop({ src, poster, className = '' }: { src: string; poster: str
 }
 
 export default function Today() {
-  const { memories, letters, exposures, strips } = useStore()
+  const { memories, letters, exposures } = useStore()
   const now = useNow()
   const today = todayISO()
   const arrived = letters.filter((l) => letterStatus(l, now) === 'arrived').sort((a, b) => a.writtenAt.localeCompare(b.writtenAt))
@@ -140,7 +140,7 @@ export default function Today() {
             <h2 id="rituals-h">Small rituals</h2>
             <p className="section-meta">A minute each</p>
           </div>
-          <Rituals memories={memories} exposures={exposures} strip={strips[today]} today={today} />
+          <Rituals memories={memories} exposures={exposures} today={today} />
         </section>
       )}
 
