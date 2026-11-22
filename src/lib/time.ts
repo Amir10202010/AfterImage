@@ -34,14 +34,16 @@ export function todayISO() {
 
 /** "3 years ago", "8 months ago", "yesterday" */
 export function ago(d: string, now = new Date()) {
-  const ms = now.getTime() - parse(d).getTime()
-  const days = Math.round(ms / 86400000)
+  // calendar days, not elapsed time: at 2 pm, a date from this morning is still "today"
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const days = Math.round((today.getTime() - parse(d).getTime()) / 86400000)
   if (days <= 0) return 'today'
   if (days === 1) return 'yesterday'
   if (days < 45) return `${days} days ago`
   const months = Math.round(days / 30.44)
   if (months < 18) return `${months} months ago`
-  const years = Math.floor(days / 365.25)
+  // a small allowance, so exactly two calendar years (730 days) reads as 2, not 1.998 → 1
+  const years = Math.floor(days / 365.25 + 0.05)
   return years === 1 ? 'a year ago' : `${years} years ago`
 }
 

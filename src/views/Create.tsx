@@ -19,7 +19,7 @@ import { todayISO, roman } from '../lib/time'
 import { AppVoice, Back, InfoTip, SealPicker, sealToDate, type SealChoice } from '../components/common'
 import Photo from '../components/Photo'
 import { BATH_NAMES } from './Darkroom'
-import { drawFromWords, drawPref, setDrawPref } from '../lib/imagine'
+import { DrawUnavailable, drawFromWords, drawPref, setDrawPref } from '../lib/imagine'
 
 const STEPS = ['The day', 'What you kept', 'Around it', 'What we noticed', 'A letter forward']
 const WEATHER = ['Sun', 'Cold sun', 'Clouds', 'Rain', 'Snow', 'Wind', 'Heat', 'Fog']
@@ -144,6 +144,8 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
   const [drawOn, setDrawOn] = useState(() => !editing && drawPref())
   const [drawing, setDrawing] = useState(false)
   const [drawErr, setDrawErr] = useState('')
+  // no keys on this server: drawing is off for this session, quietly, and the day saves as usual
+  const [drawOff, setDrawOff] = useState(false)
   const drawnFor = useRef('')
   const drawAbort = useRef<AbortController | null>(null)
   const drawnItem = photos.find((p) => p.drawn)
@@ -166,7 +168,9 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
         return rest.length ? [...rest, item] : [item]
       })
     } catch (e) {
-      if (!ac.signal.aborted) setDrawErr(e instanceof Error ? e.message : String(e))
+      if (ac.signal.aborted) return
+      if (e instanceof DrawUnavailable) setDrawOff(true)
+      else setDrawErr(e instanceof Error ? e.message : String(e))
     } finally {
       if (drawAbort.current === ac) setDrawing(false)
     }
@@ -180,7 +184,7 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
 
   // draw once the writer pauses; redraw only when the story has grown or changed a lot
   useEffect(() => {
-    if (!drawOn || editing) return
+    if (!drawOn || drawOff || editing) return
     const words = story.trim()
     if (words.split(/\s+/).length < DRAW_MIN_WORDS) return
     const last = drawnFor.current
@@ -189,7 +193,7 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
     return () => window.clearTimeout(t)
     // drawNow reads the latest fields; only the story should restart the timer
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [story, drawOn, editing])
+  }, [story, drawOn, drawOff, editing])
 
   useEffect(() => () => drawAbort.current?.abort(), [])
 
@@ -368,6 +372,11 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
                     </button>
                   </p>
                 )}
+                {drawOff ? (
+                  <p className="drawn-toggle drawn-off">
+                    Drawing a picture from your words is off here: this server has no image keys (see README). Your own photos work as usual.
+                  </p>
+                ) : (
                 <label className="drawn-toggle">
                   <input
                     type="checkbox"
@@ -381,6 +390,7 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
                   Draw a picture from my story as I write{' '}
                   <InfoTip>Your words are sent to Gemini (to describe the scene) and Pollinations (to draw it). The picture comes back and is kept only on this device.</InfoTip>
                 </label>
+                )}
               </div>
             )}
           </section>

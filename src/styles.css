@@ -4317,7 +4317,8 @@ a.letter-group-title:hover {
   min-width: 180px;
   font: 400 20px var(--hand);
 }
-.tray {
+/* the notebook spread's tray; scoped so it does not reach the darkroom's .tray */
+section.tray {
   margin-top: 26px;
   display: grid;
   gap: 14px;
@@ -4368,7 +4369,7 @@ a.letter-group-title:hover {
 .tray-sticker {
   width: 60px;
 }
-.tray-photo {
+button.tray-photo {
   flex: none;
   position: relative;
   width: 64px;

@@ -138,3 +138,17 @@ describe('caption', () => {
     expect(story).toContain(pickCaption(story)!)
   })
 })
+
+describe('folder names: light and Russian words', () => {
+  const ru = 'Утром шёл дождь, и мы с Аней пошли в кофейню на углу. Она рассказала, что уезжает учиться в Прагу. Увидимся ли мы ещё?'
+  it('reads 18:30 as evening in November and as day light in June', () => {
+    expect(folderTitle({ story: 'We walked home.', date: '2025-11-22', time: '18:30', people: [], moments: [] })).toMatch(/^Autumn evening/)
+    expect(folderTitle({ story: 'We walked home.', date: '2025-06-22', time: '18:30', people: [], moments: [] })).toMatch(/^Summer (day|afternoon)/)
+  })
+  it('never puts an inflected word from a Russian story into the name', () => {
+    const t = folderTitle({ story: ru, date: '2026-11-22', time: '18:30', people: [], moments: [] })
+    expect(t).toMatch(/^Осенний вечер/)
+    expect(t).not.toMatch(/рассказала|прагу/i)
+    expect(folderTitle({ story: ru, date: '2026-11-22', time: '18:30', location: 'Набережная', people: ['Аня'], moments: [] })).toBe('Осенний вечер, Набережная')
+  })
+})

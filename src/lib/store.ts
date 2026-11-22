@@ -88,6 +88,27 @@ async function seedDemoRoll() {
   await db.put('meta', 'seededRoll', true)
 }
 
+/** Every blob something still points to: a day's photos and song file, the shoebox, notebook pages. */
+export function liveBlobIds(st: Pick<State, 'memories' | 'shoebox' | 'pages'>): Set<string> {
+  const live = new Set<string>()
+  for (const m of st.memories) {
+    for (const id of m.photoIds) live.add(id)
+    if (m.song?.audioId) live.add(m.song.audioId)
+  }
+  for (const it of st.shoebox) {
+    live.add(it.blobId)
+    live.add(it.thumbId)
+  }
+  for (const p of Object.values(st.pages)) for (const i of p.items) if (i.ref) live.add(i.ref)
+  return live
+}
+
+/** Deletes blobs nothing points to any more (left behind by earlier demo restores). */
+async function pruneOrphanBlobs() {
+  const live = liveBlobIds(state)
+  for (const k of await db.keys('blobs')) if (!live.has(String(k))) await db.del('blobs', String(k))
+}
+
 export async function restoreDemos() {
   for (const m of state.memories.filter((m) => m.demo)) await db.del('memories', m.id)
   for (const l of state.letters.filter((l) => l.demo)) await db.del('letters', l.id)
@@ -99,6 +120,15 @@ export async function restoreDemos() {
   set({ memories: memories.sort(byDate), letters, shoebox: shoebox.sort((a, b) => a.takenAt.localeCompare(b.takenAt)), pages: Object.fromEntries(pages.map((p) => [p.date, p])) })
   // real photos in public/demo/ replace the drawings again — once the fresh state is in place
   await (await import('../demo/upgrade')).recheckDemoAssets()
+  // the old demo photos are not pointed to by anything now: drop them, or every restore adds ~20 MB
+  await pruneOrphanBlobs()
+  const live = liveBlobIds(state)
+  urlCache.forEach((u, id) => {
+    if (!live.has(id)) {
+      URL.revokeObjectURL(u)
+      urlCache.delete(id)
+    }
+  })
 }
 
 export async function eraseEverything() {

@@ -31,3 +31,23 @@ describe('the offline reader', () => {
     expect(score('radio', 'radio').every((m) => m === 'hit')).toBe(true)
   })
 })
+
+describe('title suggestions for a Russian story', () => {
+  const story = 'Утром шёл дождь, и мы с Аней пошли в кофейню на углу. Она рассказала, что уезжает учиться в Прагу. Увидимся ли мы ещё?'
+  it('are Russian, with no English frame around an inflected word', async () => {
+    const { suggestTitles } = await import('./extract')
+    const t = suggestTitles(story, 'Набережная', '2026-11-22')
+    for (const x of t) expect(x).not.toMatch(/\b(The|day|A|in)\b/)
+    expect(t).toContain('Набережная, ноябрь')
+    expect(t).toContain('Воскресенье, 22 ноября')
+  })
+})
+
+describe('threads in a Russian story', () => {
+  it('finds promises and questions', async () => {
+    const { extractThreads } = await import('./extract')
+    const t = extractThreads('Шёл дождь. Я хочу запомнить, как пахло мокрым асфальтом. В следующий раз возьму зонт. Мы долго молчали. Увидимся ли мы ещё?')
+    expect(t.map((x) => x.kind)).toEqual(['intention', 'intention', 'question'])
+    expect(t[0].quote).toBe('Я хочу запомнить, как пахло мокрым асфальтом.')
+  })
+})

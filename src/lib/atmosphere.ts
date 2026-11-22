@@ -165,9 +165,17 @@ export interface DaySignals {
   photo?: { hue: number; sat: number; light: number; warmth: number }
 }
 
-function lightFrom(time: string | undefined, text: string): Light {
-  const h = time && /^\d{1,2}:\d\d/.test(time) ? Number(time.split(':')[0]) : NaN
-  if (!Number.isNaN(h)) return h >= 5 && h < 8 ? 'dawn' : h < 16 && h >= 8 ? 'day' : h >= 16 && h < 19 ? 'golden' : h >= 19 && h < 21 ? 'dusk' : 'night'
+/** Rough hour of sunset by month (mid-latitudes): 16 in December, 21 in June. */
+const SUNSET = [16.5, 17.5, 18.5, 19.5, 20.5, 21, 21, 20.5, 19.5, 18.5, 17, 16.5]
+
+function lightFrom(time: string | undefined, text: string, date?: string): Light {
+  const hm = time && /^\d{1,2}:\d\d/.test(time) ? time.split(':').map(Number) : undefined
+  if (hm) {
+    const h = hm[0] + hm[1] / 60
+    // the golden hour and the dusk follow the season: 18:30 is evening in November, afternoon in June
+    const sunset = SUNSET[(Number(date?.slice(5, 7)) || 6) - 1]
+    return h >= 5 && h < 8 ? 'dawn' : h >= 8 && h < sunset - 2 ? 'day' : h >= sunset - 2 && h < sunset ? 'golden' : h >= sunset && h < sunset + 2 ? 'dusk' : 'night'
+  }
   const t = norm(text)
   if (W('dawn|sunrise|рассвет').test(t)) return 'dawn'
   if (W('sunset|golden hour|закат').test(t)) return 'golden'
@@ -230,7 +238,7 @@ export function readSignals(m: DayInput, swatches?: Swatch[]): DaySignals {
   const aloneWords = count('alone')
   const company: Company = people >= 2 || groupWords >= 3 ? 'group' : people === 1 || groupWords >= 1 ? 'pair' : aloneWords > 0 || people === 0 ? 'alone' : 'pair'
   const night = count('night')
-  let light = lightFrom(firstTime(m), all)
+  let light = lightFrom(firstTime(m), all, m.date)
   if (light === 'day' && night >= 2) light = 'night'
 
   return {
@@ -615,7 +623,9 @@ export function folderTitle(m: DayInput): string {
   if (ru) {
     const [noun, g] = PART_RU[s.light]
     const head = `${SEASON_RU[s.season][g]} ${noun}`
-    const where = place ? `, ${place}` : key ? `, ${key.toLowerCase()}` : ''
+    // a word from a Russian story comes inflected ("Прагу", "рассказала"), so only a place goes in;
+    // without one the title is padded with the month instead ("Осенний вечер в ноябре")
+    const where = place ? `, ${place}` : ''
     const who = friends ? ' с друзьями' : family ? ' с семьёй' : s.company === 'alone' ? ' наедине с собой' : ''
     const full = head + where + who
     return normalizeFolderTitle(wordCount(full) <= TITLE_MAX ? full : head + where, m.date)

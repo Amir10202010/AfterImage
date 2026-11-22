@@ -736,3 +736,11 @@
   opacity: 0.6;
   cursor: progress;
 }
+
+/* new day: drawing is off because the server has no image keys — a note, not an error */
+.drawn-toggle.drawn-off {
+  display: block;
+  margin: 0;
+  max-width: var(--measure);
+  cursor: default;
+}
