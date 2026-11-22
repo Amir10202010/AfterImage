@@ -271,13 +271,13 @@ export default function Landing() {
   const [entering, setEntering] = useState(false)
   const [solid, setSolid] = useState(false)
   useEffect(() => {
-    const on = () => setSolid(window.scrollY > window.innerHeight * 0.8)
+    // the bar turns solid as soon as the page moves, so the headline never slides under bare text
+    const on = () => setSolid(window.scrollY > 24)
     on()
     window.addEventListener('scroll', on, { passive: true })
     return () => window.removeEventListener('scroll', on)
   }, [])
   const shutter = useRef<HTMLVideoElement>(null)
-  const returning = hasEntered()
 
   const enter = () => {
     try {
@@ -303,7 +303,7 @@ export default function Landing() {
           Afterimage
         </a>
         <button type="button" className="l-nav-cta" onClick={enter} data-magnetic>
-          <span>{returning ? 'Back to the app' : 'Open the app'}</span>
+          <span>Open the darkroom</span>
         </button>
       </header>
 
@@ -330,7 +330,6 @@ export default function Landing() {
             </a>
           </div>
         </div>
-        <span className="l-scroll" aria-hidden="true" />
       </section>
 
       <ScrollFilm />
@@ -391,11 +390,11 @@ export default function Landing() {
         <section className="l-privacy">
           <div className="l-privacy-text" data-reveal>
             <h2>
-              <Words text="Nothing leaves your device." />
+              <Words text="Your days stay on your device." />
             </h2>
             <p className="l-privacy-lede">
-              Not your photographs, not your words, not the letters you seal for later. It all stays here, with you
-              <em> — even offline.</em>
+              Photographs, words and sealed letters live in this browser, not on a server. No account, no tracking.
+              <em> The two AI extras stay off until you turn them on.</em>
             </p>
           </div>
         </section>
@@ -413,7 +412,7 @@ export default function Landing() {
             <button type="button" className="l-btn l-btn-dark" onClick={enter} data-magnetic>
               <span>Open the darkroom</span>
             </button>
-            <p className="l-fine dark">Three fictional demo days are inside, so you can try everything first.</p>
+            <p className="l-fine dark">Five fictional demo days are inside, so you can try everything first.</p>
           </div>
         </section>
       </Morph>
@@ -431,6 +430,10 @@ export default function Landing() {
           </span>
         </a>
         <p className="l-foot-line">A darkroom for the person you were</p>
+        <nav className="l-foot-links" aria-label="Legal">
+          <a href="#/privacy">Privacy</a>
+          <a href="#/terms">Terms</a>
+        </nav>
       </footer>
 
       {entering && (

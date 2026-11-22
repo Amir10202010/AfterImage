@@ -273,7 +273,7 @@ export default function Settings() {
             The demo days belong to a fictional person. Anything the app writes is marked <span className="app-mark">◇</span>.
           </p>
           <div className="set-danger-acts">
-            <ConfirmButton confirm="Put the three demo days back as they were?" onConfirm={() => restoreDemos().then(() => toast('The demo days are back.'))}>
+            <ConfirmButton confirm="Put the demo days back as they were?" onConfirm={() => restoreDemos().then(() => toast('The demo days are back.'))}>
               Restore demo days
             </ConfirmButton>
             <ConfirmButton
@@ -286,6 +286,14 @@ export default function Settings() {
           </div>
         </div>
       </section>
+      <p className="set-legal">
+        <a className="link" href="#/privacy">
+          Privacy
+        </a>
+        <a className="link" href="#/terms">
+          Terms
+        </a>
+      </p>
     </main>
   )
 }

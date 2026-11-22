@@ -35,7 +35,7 @@ export function ScrapPhoto({ refId, negative, variant = 'instax', thumb = false,
 
 const INK = '#3B3430'
 
-/** A photographed piece (on white, blended into the paper) — or the drawing, if the photo isn't there. */
+/** A photographed piece, cut out of its white backdrop (scripts/cutout_scrap.py), or the drawing if the photo isn't there. */
 function Photographed({ file, fallback, className }: { file: string; fallback: ReactNode; className: string }) {
   const [ok, setOk] = useState<boolean | null>(null)
   if (ok === false) return <>{fallback}</>
@@ -48,7 +48,7 @@ function Photographed({ file, fallback, className }: { file: string; fallback: R
 }
 
 export function Sticker({ variant }: { variant?: string }) {
-  return <Photographed file={`/demo/scrap/sticker-${variant ?? 'flower'}.png`} className="scrap-photo" fallback={<DrawnSticker variant={variant} />} />
+  return <Photographed file={`/demo/scrap/sticker-${variant ?? 'flower'}.webp`} className="scrap-photo" fallback={<DrawnSticker variant={variant} />} />
 }
 
 const SAME: Record<string, string> = { flower2: 'flower', flower3: 'leaf', stamp2: 'stamp', stamp3: 'stamp' }
@@ -141,7 +141,7 @@ function DrawnSticker({ variant: v }: { variant?: string }) {
 
 export function Tape({ variant }: { variant?: string }) {
   const v = variant ?? 'kraft'
-  return <Photographed file={`/demo/scrap/tape-${v}.png`} className="scrap-photo scrap-tape" fallback={<span className={`tape tape-${v}`} aria-hidden="true" />} />
+  return <Photographed file={`/demo/scrap/tape-${v}.webp`} className="scrap-photo scrap-tape" fallback={<span className={`tape tape-${v}`} aria-hidden="true" />} />
 }
 
 /** An optional picture from public/demo/ui — nothing at all if it isn't there. */

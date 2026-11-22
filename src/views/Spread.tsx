@@ -199,63 +199,63 @@ function Book({ day, initial, isSaved, prev, next }: { day: Day; initial: PageIt
         </div>
       )}
 
-      <section className="tray" aria-label="Add to the page">
+      <section className="kit" aria-label="Add to the page">
         {unplaced.length > 0 && (
-          <div className="tray-row">
-            <span className="tray-k">Photos from this day</span>
-            <div className="tray-items">
+          <div className="kit-row">
+            <span className="kit-k">Photos from this day</span>
+            <div className="kit-items">
               {unplaced.map((p) => (
-                <button key={p.ref} type="button" className="tray-photo" onClick={() => add(newItem('photo', 0, { ref: p.ref, w: 46 }))} aria-label="Put this photo on the page">
+                <button key={p.ref} type="button" className="kit-photo" onClick={() => add(newItem('photo', 0, { ref: p.ref, w: 46 }))} aria-label="Put this photo on the page">
                   <ScrapPhoto refId={p.ref} negative={p.negative} variant="cell" thumb />
                 </button>
               ))}
             </div>
           </div>
         )}
-        <div className="tray-row">
-          <span className="tray-k">Write</span>
-          <div className="tray-items">
-            <button type="button" className="tray-btn" onClick={() => add(newItem('note', 1, { variant: 'hand' }))}>
+        <div className="kit-row">
+          <span className="kit-k">Write</span>
+          <div className="kit-items">
+            <button type="button" className="kit-btn" onClick={() => add(newItem('note', 1, { variant: 'hand' }))}>
               <span className="note note-hand">handwriting</span>
             </button>
-            <button type="button" className="tray-btn" onClick={() => add(newItem('note', 1, { variant: 'sticky', w: 34 }))}>
+            <button type="button" className="kit-btn" onClick={() => add(newItem('note', 1, { variant: 'sticky', w: 34 }))}>
               <span className="note note-sticky">sticky note</span>
             </button>
-            <button type="button" className="tray-btn" onClick={() => add(newItem('note', 0, { variant: 'torn', w: 40 }))}>
+            <button type="button" className="kit-btn" onClick={() => add(newItem('note', 0, { variant: 'torn', w: 40 }))}>
               <span className="note note-torn">torn paper</span>
             </button>
-            <button type="button" className="tray-btn" onClick={() => add(newItem('label', 1, { text: 'HELLO' }))}>
+            <button type="button" className="kit-btn" onClick={() => add(newItem('label', 1, { text: 'HELLO' }))}>
               <span className="stamp-letters small">ABC</span>
             </button>
-            <button type="button" className="tray-btn" onClick={() => add(newItem('label', 1, { variant: 'typed', text: day.date.replace(/-/g, ' '), w: 40 }))}>
+            <button type="button" className="kit-btn" onClick={() => add(newItem('label', 1, { variant: 'typed', text: day.date.replace(/-/g, ' '), w: 40 }))}>
               <span className="typed">typed</span>
             </button>
-            <button type="button" className="tray-btn" onClick={() => add(newItem('ticket', 0, { text: `№ ${Math.floor(Math.random() * 90000 + 10000)}` }))}>
+            <button type="button" className="kit-btn" onClick={() => add(newItem('ticket', 0, { text: `№ ${Math.floor(Math.random() * 90000 + 10000)}` }))}>
               ticket
             </button>
           </div>
         </div>
-        <div className="tray-row">
-          <span className="tray-k">Tape</span>
-          <div className="tray-items">
+        <div className="kit-row">
+          <span className="kit-k">Tape</span>
+          <div className="kit-items">
             {TAPES.map((t) => (
-              <button key={t} type="button" className="tray-btn tray-tape" onClick={() => add(newItem('tape', 0, { variant: t }))} aria-label={`${t} washi tape`}>
+              <button key={t} type="button" className="kit-btn kit-tape" onClick={() => add(newItem('tape', 0, { variant: t }))} aria-label={`${t} washi tape`}>
                 <Tape variant={t} />
               </button>
             ))}
           </div>
         </div>
-        <div className="tray-row">
-          <span className="tray-k">Stickers</span>
-          <div className="tray-items">
+        <div className="kit-row">
+          <span className="kit-k">Stickers</span>
+          <div className="kit-items">
             {STICKERS.map((s) => (
-              <button key={s} type="button" className="tray-btn tray-sticker" onClick={() => add(newItem('sticker', 1, { variant: s, w: s === 'ticket' ? 22 : 14 }))} aria-label={`${s} sticker`}>
+              <button key={s} type="button" className="kit-btn kit-sticker" onClick={() => add(newItem('sticker', 1, { variant: s, w: s === 'ticket' ? 22 : 14 }))} aria-label={`${s} sticker`}>
                 <Sticker variant={s} />
               </button>
             ))}
           </div>
         </div>
-        <p className="tray-foot">
+        <p className="kit-foot">
           <InfoTip label="How to arrange the page">Drag anything on the pages. Tap to select · arrows move · + − resize · R rotates. Saved on this device as you go.</InfoTip>
           {(isSaved || dirty) && (
             <>

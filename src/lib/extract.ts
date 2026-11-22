@@ -88,11 +88,21 @@ export function extractRecall(story: string, max = 3, avoid: string[] = []): Rec
     }
     if (best) cands.push({ sentence: s, ...best })
   }
+  // one game per word: the same word picked from two sentences would ask the same question twice
+  const seen = new Set<string>()
   return cands
     .sort((a, b) => b.score - a.score)
+    .filter((c) => !seen.has(norm(c.word)) && !!seen.add(norm(c.word)))
     .slice(0, max)
     .sort((a, b) => ss.indexOf(a.sentence) - ss.indexOf(b.sentence))
     .map((c) => ({ id: id('r'), sentence: c.sentence, word: c.word }))
+}
+
+/** A word the writer capitalises in the middle of a sentence is a name: keep its capital. */
+function isName(word: string, story: string) {
+  if (!/^\p{Lu}\p{Ll}/u.test(word)) return false
+  const w = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`[\\p{Ll},;:]\\s+${w}\\b`, 'u').test(story)
 }
 
 const INTENT =
@@ -111,7 +121,7 @@ export function suggestTitles(story: string, location?: string, date?: string): 
   const out: string[] = []
   const ss = sentences(story)
   const rec = extractRecall(story, 1)[0]
-  if (rec) out.push(`The ${rec.word.toLowerCase()} day`)
+  if (rec) out.push(`The ${isName(rec.word, story) ? rec.word : rec.word.toLowerCase()} day`)
   if (location) {
     const month = date ? new Date(date + 'T12:00').toLocaleDateString('en-GB', { month: 'long' }) : ''
     out.push(`${location}${month ? ', ' + month : ''}`)

@@ -108,8 +108,8 @@ function Puzzle({ m, sentence, word, onSolved, onNext, last }: { m: BathProps['m
         <span
           className={`gap ${shake ? 'is-shake' : ''} ${done ? 'is-filled' : ''}`}
           onClick={() => input.current?.focus()}
-          aria-label={done ? word : `${n} letter word`}
         >
+          {!done && <span className="sr-only">{`a missing ${n} letter word`}</span>}
           {done
             ? word
             : Array.from({ length: n }, (_, k) => (

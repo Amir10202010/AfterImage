@@ -1,11 +1,13 @@
 import { useRef, useState } from 'react'
-import { deleteMemory, letterStatus, touchMemory, uid, updateMemory, useStore } from '../lib/store'
+import { deleteMemory, letterStatus, touchMemory, uid, updateMemory, useStore, waitsForDevelop } from '../lib/store'
 import type { Letter, Memory } from '../lib/types'
 import { ago, longDate, weekday } from '../lib/time'
 import Photo, { fadeOf } from '../components/Photo'
 import { AppVoice, Back, ConfirmButton, PastLabel, StampMark, StampSet } from '../components/common'
 import { LetterReader, ReadLetter, ReplyComposer, SealedLetter, markOpened } from '../components/Conversation'
-import { SoundToggle, memoryStyle } from './Darkroom'
+import DayFilm, { DayRules, safeUrl, useAtmosphere } from '../components/DayFilm'
+import { folderName } from '../lib/atmosphere'
+import { memoryStyle } from './Darkroom'
 import { go } from '../App'
 
 export default function Print({ id }: { id: string }) {
@@ -30,6 +32,9 @@ function PrintPage({ m, letters }: { m: Memory; letters: Letter[] }) {
   const photos = m.photoIds.length || 1
   const paras = m.story.split(/\n+/).filter(Boolean)
   const last = [...letters].reverse().find((l) => letterStatus(l) !== 'sealed')
+  const atm = useAtmosphere(m)
+  const named = m.title === folderName(m)
+  const songLink = safeUrl(m.song?.url)
 
   const addNote = async () => {
     if (!note.trim()) return
@@ -62,13 +67,16 @@ function PrintPage({ m, letters }: { m: Memory; letters: Letter[] }) {
       </header>
 
       <section className="print-hero">
-        <div className="print-photo-wrap">
-          <Photo memory={m} index={hero} p={developed ? 1 : 0.35} className="print-photo" fade={fadeOf(m)} />
+        <div className="print-day">
+          <DayFilm m={m} index={hero} onIndex={setHero} fade={fadeOf(m)} />
           {fadeOf(m) > 0.05 && <Refix m={m} />}
           {!developed && (
-            <a className="print-undeveloped" href={`#/develop/${m.id}`}>
-              Still a negative — develop it
-            </a>
+            <p className="print-negative">
+              This day is still a negative in the darkroom.{' '}
+              <a className="link" href={`#/develop/${m.id}`}>
+                Develop it
+              </a>
+            </p>
           )}
           {m.photoIds.length > 1 && (
             <div className="contact" role="tablist" aria-label="Photographs">
@@ -83,6 +91,7 @@ function PrintPage({ m, letters }: { m: Memory; letters: Letter[] }) {
         </div>
         <div className="print-head">
           {m.demo && <p className="demo-tag">Fictional demo memory</p>}
+          <p className="print-folder">{named ? 'Folder of the day · named by Afterimage' : 'Folder of the day'}</p>
           <p className="print-dateline">
             {weekday(m.date)}, {longDate(m.date)}
             {m.time && <> · {m.time}</>}
@@ -121,17 +130,18 @@ function PrintPage({ m, letters }: { m: Memory; letters: Letter[] }) {
                 <span className="record-k">On the record</span>
                 <span className="record-title">{m.song.title}</span>
                 <span className="record-artist">{m.song.artist}</span>
-                <div className="row">
-                  <SoundToggle m={m} />
-                  {m.song.url && (
-                    <a className="link" href={m.song.url} target="_blank" rel="noreferrer noopener">
-                      Open the song ↗
-                    </a>
-                  )}
-                </div>
+                {(m.song.genre || m.song.year || m.song.bpm) && (
+                  <span className="record-facts">{[m.song.genre, m.song.year, m.song.bpm && `${m.song.bpm} bpm`, m.song.mode].filter(Boolean).join(' · ')}</span>
+                )}
+                {songLink && (
+                  <a className="link" href={songLink} target="_blank" rel="noreferrer noopener">
+                    Open the song ↗
+                  </a>
+                )}
               </div>
             </div>
           )}
+          <DayRules atm={atm} />
         </div>
       </section>
 
@@ -182,7 +192,7 @@ function PrintPage({ m, letters }: { m: Memory; letters: Letter[] }) {
               <ol className="timeline">
                 {m.moments.map((mo, i) => (
                   <li key={mo.id}>
-                    <span className="timeline-t">{mo.time ?? String(i + 1).padStart(2, '0')}</span>
+                    <span className="timeline-t">{mo.time ?? <span aria-label={`moment ${i + 1}`}>·</span>}</span>
                     <span>{mo.text}</span>
                   </li>
                 ))}
@@ -252,6 +262,18 @@ function PrintPage({ m, letters }: { m: Memory; letters: Letter[] }) {
             const s = letterStatus(l)
             if (s === 'sealed') return <SealedLetter key={l.id} l={l} />
             if (s === 'open') return <ReadLetter key={l.id} l={l} />
+            if (waitsForDevelop(l, [m]))
+              return (
+                <div key={l.id} className="unopened">
+                  <span className="wax" aria-hidden="true">
+                    A
+                  </span>
+                  <span>Left inside this day, {longDate(l.writtenAt)}. It opens when you develop it.</span>
+                  <a className="btn btn-light btn-sm" href={`#/develop/${m.id}`}>
+                    Develop it
+                  </a>
+                </div>
+              )
             return readingId === l.id ? (
               <LetterReader key={l.id} letter={l} intro={false} onRead={() => markOpened(l)} />
             ) : (

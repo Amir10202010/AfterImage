@@ -11,6 +11,17 @@ export interface Song {
   /** id of a user-uploaded audio blob */
   audioId?: string
   tempo: Tempo
+  /** beats per minute, measured from the uploaded file or typed in */
+  bpm?: number
+  /** major or minor key, as the person heard it */
+  mode?: 'major' | 'minor'
+  genre?: string
+  /** the year the song came out */
+  year?: number
+  /** 0 to 1, measured from the uploaded file (loudness and density) */
+  energy?: number
+  /** 0 to 1, measured from the uploaded file (how much treble) */
+  brightness?: number
 }
 
 /** A moment of the day. `text` is always a verbatim span of the story or the user's own edit. */

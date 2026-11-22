@@ -1,7 +1,8 @@
 // POST /api/imagine — turns a diary entry into a picture.
 //
 // 1. Gemini (free tier) rewrites the story as one visual scene prompt. Keys rotate per request.
-// 2. Pollinations draws it.
+// 2. Pollinations draws that scene. The diary text itself never goes to Pollinations: if Gemini can't
+//    describe the scene, nothing is drawn.
 // 3. The image bytes go straight back to the browser, which crops and stores them on the device.
 //
 // Keys live only in server env vars (.env locally, Project Settings → Environment Variables on Vercel).
@@ -48,7 +49,8 @@ export function rotation<T>(keys: T[], start = turn++): T[] {
 
 const RETRYABLE = new Set([401, 403, 429, 500, 502, 503, 504])
 
-async function writePrompt(input: Input): Promise<string> {
+/** The scene description for the image model, or null when Gemini can't write one: the diary itself is never sent on. */
+async function writePrompt(input: Input): Promise<string | null> {
   const keys = list('GEMINI_API_KEYS')
   const models = list('GEMINI_MODEL').length ? list('GEMINI_MODEL') : ['gemini-2.5-flash', 'gemini-2.5-flash-lite']
   const facts = [
@@ -95,8 +97,8 @@ async function writePrompt(input: Input): Promise<string> {
       if (!RETRYABLE.has(r.status)) break
     }
   }
-  // no Gemini: still draw something honest from the words themselves
-  return `A candid photograph of this moment from someone's day: ${input.story.replace(/\s+/g, ' ').slice(0, 400)}`
+  // no scene description: give up rather than put the diary entry itself into an image URL
+  return null
 }
 
 async function draw(prompt: string): Promise<Response> {
@@ -128,10 +130,18 @@ function limited(ip: string) {
 
 const json = (status: number, body: object) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } })
 
+function sameSite(origin: string | null, host: string | null) {
+  if (!origin || !host) return false // browsers always send Origin with a POST; scripts usually don't
+  try {
+    return new URL(origin).host === host
+  } catch {
+    return false
+  }
+}
+
 export async function POST(req: Request): Promise<Response> {
-  const origin = req.headers.get('origin')
   const host = req.headers.get('x-forwarded-host') ?? req.headers.get('host')
-  if (origin && host && URL.parse(origin)?.host !== host) return json(403, { error: 'forbidden' })
+  if (!sameSite(req.headers.get('origin'), host)) return json(403, { error: 'forbidden' })
   const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'local'
   if (limited(ip)) return json(429, { error: 'Too many pictures at once. Wait a minute.' })
 
@@ -144,7 +154,7 @@ export async function POST(req: Request): Promise<Response> {
   const clip = (s: unknown, n: number) => (typeof s === 'string' ? s.trim().slice(0, n) : undefined)
   const story = clip(input.story, MAX_STORY)
   if (!story || story.length < 20) return json(400, { error: 'Write a little more first.' })
-  if (!list('POLLINATIONS_API_KEY').length) return json(503, { error: 'Picture drawing is not set up on this server.' })
+  if (!list('POLLINATIONS_API_KEY').length || !list('GEMINI_API_KEYS').length) return json(503, { error: 'Picture drawing is not set up on this server.' })
 
   const prompt = await writePrompt({
     story,
@@ -155,6 +165,7 @@ export async function POST(req: Request): Promise<Response> {
     mood: clip(input.mood, 60),
     date: clip(input.date, 20),
   })
+  if (!prompt) return json(502, { error: 'The picture could not be drawn right now. Try again in a moment.' })
   const img = await draw(prompt)
   if (!img.ok) return json(img.status === 402 || img.status === 429 ? 429 : 502, { error: 'The picture could not be drawn right now. Try again in a moment.' })
   return new Response(img.body, {

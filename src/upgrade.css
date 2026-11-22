@@ -506,11 +506,21 @@ kbd {
 }
 .drawn-toggle {
   display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font: 13px/1.4 var(--sans);
-  color: var(--ink-3, #6b6259);
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 62ch;
+  font: 500 14px/1.45 var(--sans);
+  color: var(--ink-2);
   cursor: pointer;
+}
+.drawn-toggle input {
+  margin-top: 3px;
+  accent-color: var(--burgundy);
+}
+.drawn-toggle small {
+  display: block;
+  font: 400 13px/1.45 var(--sans);
+  color: var(--ink-3);
 }
 @keyframes drawn-breathe {
   50% {

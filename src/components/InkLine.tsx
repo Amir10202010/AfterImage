@@ -105,16 +105,21 @@ export default function InkLine({ zone }: { zone: RefObject<HTMLElement | null> 
         const h_ = el.offsetHeight
         return { l, t, r: l + w_, b: t + h_, cx: l + w_ / 2, cy: t + h_ / 2 }
       }
-      const narrow = w < 760
+      // the same switch as the stylesheet's (max-width: 860px), where the photo moves above the text
+      const narrow = window.matchMedia('(max-width: 860px)').matches
       const clampX = (x: number) => Math.max(14, Math.min(w - 14, x))
       const pts: P[] = []
       const pools: P[] = []
 
       const manifesto = z.querySelector<HTMLElement>('[data-ink="intro"]')
       if (manifesto) {
+        // the stroke starts under the manifesto's words, never through them
         const m = box(manifesto)
-        pts.push({ x: w * 0.5, y: m.t + 10 }, { x: w * 0.5 + 6, y: m.t + 60 })
-        pts.push({ x: w * (narrow ? 0.9 : 0.78), y: m.b - 70 })
+        const text = manifesto.querySelector<HTMLElement>('p')
+        // the manifesto stands on the dark and the paper comes up beneath it: the ink starts once there is paper
+        const below = Math.max(text ? box(text).b + 28 : m.t + 10, m.t + (m.b - m.t) * 0.66)
+        pts.push({ x: w * 0.5, y: below }, { x: w * 0.5 + 6, y: below + 40 })
+        pts.push({ x: w * (narrow ? 0.9 : 0.78), y: Math.max(below + 90, m.b - 50) })
       }
       const blocks = [...z.querySelectorAll<HTMLElement>('[data-ink="block"]')]
       blocks.forEach((sec, i) => {
@@ -235,11 +240,8 @@ export default function InkLine({ zone }: { zone: RefObject<HTMLElement | null> 
         st.seeded = true
       }
     }
-    // a little slack, so a block doesn't flicker when the scroll rests right on its edge
-    for (const s of st.stops) {
-      if (st.drawn >= s.at) s.el.classList.add('is-in')
-      else if (st.drawn < s.at - 140) s.el.classList.remove('is-in')
-    }
+    // a block opens once the ink reaches it and stays open: what you have read doesn't vanish on the way back up
+    for (const s of st.stops) if (st.drawn >= s.at) s.el.classList.add('is-in')
     st.poolAt.forEach((at, i) => poolRefs.current[i]?.classList.toggle('is-wet', st.drawn >= at))
   }
 
@@ -333,7 +335,8 @@ export default function InkLine({ zone }: { zone: RefObject<HTMLElement | null> 
         const ey = w.y - st.hy
         const d = Math.hypot(ex, ey)
         if (d < R) {
-          const f = (1 - d / R) ** 2
+          // only a moving drop parts the words: at rest every word settles back where it belongs
+          const f = (1 - d / R) ** 2 * Math.min(1, st.wob / 6)
           const push = (narrowRef.current ? 10 : 20) * f
           tx = (ex / (d || 1)) * push
           ty = (ey / (d || 1)) * push
@@ -369,7 +372,8 @@ export default function InkLine({ zone }: { zone: RefObject<HTMLElement | null> 
       const st = state.current
       if (!st.samples.length) return
       const zTop = z.getBoundingClientRect().top
-      const y = window.innerHeight * 0.62 - zTop
+      // the nib runs well ahead of the reader, so a block is open before it reaches the middle of the screen
+      const y = window.innerHeight * 0.82 - zTop
       st.target = st.samples.find((s) => s.y >= y)?.l ?? st.len
       // a hidden tab gets no animation frames — draw straight to the target
       if (document.hidden) {
@@ -408,7 +412,7 @@ export default function InkLine({ zone }: { zone: RefObject<HTMLElement | null> 
   }, [geo])
 
   if (!geo) return null
-  const narrow = geo.w < 760
+  const narrow = typeof window !== 'undefined' && window.matchMedia('(max-width: 860px)').matches
   narrowRef.current = narrow
   const k = narrow ? 0.7 : 1
   return (

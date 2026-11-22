@@ -105,8 +105,18 @@ export default function Shell({ tab, children }: { tab: Tab; children: ReactNode
     </a>
   )
 
+  const skip = () => {
+    const main = document.querySelector<HTMLElement>('.shell main')
+    if (!main) return
+    main.tabIndex = -1
+    main.focus()
+  }
+
   return (
     <div className="shell">
+      <button type="button" className="skip-link" onClick={skip}>
+        Skip to content
+      </button>
       <header className="topbar">
         <a className="brand" href="#/today" aria-label="Afterimage — Today">
           <img className="brand-mark" src="/favicon.svg" alt="" aria-hidden="true" />

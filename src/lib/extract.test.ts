@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { extractMoments, extractRecall, extractThreads, findTime, score, sentences, splitAround } from './extract'
+import { extractMoments, extractRecall, extractThreads, findTime, score, sentences, splitAround, suggestTitles } from './extract'
 
 const story = `Woke up at 7am to snow on the balcony. Dad called at noon and asked if I'm coming home. At 3pm I finished the chapter. I'm going to send it to Anna tomorrow. We ate pelmeni around 8pm. Is it strange that I felt homesick and happy?`
 
@@ -29,5 +29,15 @@ describe('the offline reader', () => {
   it('scores guesses like a contact sheet', () => {
     expect(score('cupssst', 'thermos')).toEqual(['miss', 'miss', 'miss', 'near', 'miss', 'miss', 'near'])
     expect(score('radio', 'radio').every((m) => m === 'hit')).toBe(true)
+  })
+
+  it('never asks for the same word twice', () => {
+    const repeated = 'We walked along the embankment. The embankment was empty. Then the embankment lights came on.'
+    const words = extractRecall(repeated, 3).map((r) => r.word.toLowerCase())
+    expect(new Set(words).size).toBe(words.length)
+  })
+  it('keeps the capital of a name in a suggested title, and lowers ordinary words', () => {
+    expect(suggestTitles('Lunch with Mira by the river. Mira laughed at everything.')[0]).toBe('The Mira day')
+    expect(suggestTitles('Rain all morning. Everything smelled of wet chestnuts.')[0]).toMatch(/^The [a-z]+ day$/)
   })
 })

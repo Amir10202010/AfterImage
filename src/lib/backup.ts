@@ -12,13 +12,12 @@ interface BackupFile {
   blobs: [string, string, string][] // id, mime type, base64
 }
 
-function toBase64(b: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader()
-    r.onload = () => resolve(String(r.result).split(',')[1] ?? '')
-    r.onerror = () => reject(r.error)
-    r.readAsDataURL(b)
-  })
+async function toBase64(b: Blob): Promise<string> {
+  const bytes = new Uint8Array(await b.arrayBuffer())
+  let bin = ''
+  // in chunks: String.fromCharCode can't take a whole photograph's bytes as arguments at once
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+  return btoa(bin)
 }
 
 function fromBase64(data: string, type: string) {
@@ -32,14 +31,17 @@ export async function exportBackup(onProgress?: (done: number, total: number) =>
   const stores: BackupFile['stores'] = {}
   for (const s of STORES) stores[s] = await db.entries(s)
   const blobEntries = await db.entries<Blob>('blobs')
-  const blobs: BackupFile['blobs'] = []
+  // the file is assembled from many small parts: one giant string would hit the browser's string limit
+  // on a large library long before the device runs out of memory
+  const head: Omit<BackupFile, 'blobs'> = { app: 'afterimage', version: 1, exportedAt: new Date().toISOString(), stores }
+  const parts: string[] = [JSON.stringify(head).slice(0, -1), ',"blobs":[']
   let i = 0
   for (const [id, b] of blobEntries) {
-    if (b instanceof Blob) blobs.push([id, b.type, await toBase64(b)])
+    if (b instanceof Blob) parts.push((parts.length > 2 ? ',' : '') + JSON.stringify([id, b.type, await toBase64(b)]))
     onProgress?.(++i, blobEntries.length)
   }
-  const file: BackupFile = { app: 'afterimage', version: 1, exportedAt: new Date().toISOString(), stores, blobs }
-  return new Blob([JSON.stringify(file)], { type: 'application/json' })
+  parts.push(']}')
+  return new Blob(parts, { type: 'application/json' })
 }
 
 export function downloadBlob(blob: Blob, name: string) {
@@ -53,18 +55,47 @@ export function downloadBlob(blob: Blob, name: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 4000)
 }
 
-/** Replaces everything on this device with the backup. Throws if the file isn't an Afterimage backup. */
+const isPairs = (x: unknown) => Array.isArray(x) && x.every((e) => Array.isArray(e) && e.length === 2 && typeof e[0] === 'string')
+const isBlobs = (x: unknown) => Array.isArray(x) && x.every((e) => Array.isArray(e) && e.length === 3 && e.every((v) => typeof v === 'string'))
+
+function isBackup(d: unknown): d is BackupFile {
+  const f = d as BackupFile | null
+  return (
+    !!f &&
+    f.app === 'afterimage' &&
+    f.version === 1 &&
+    typeof f.stores === 'object' &&
+    f.stores !== null &&
+    Object.values(f.stores).every(isPairs) &&
+    (f.blobs === undefined || isBlobs(f.blobs))
+  )
+}
+
+/**
+ * Replaces everything on this device with the backup. The file is read and checked in full first, then
+ * written in one transaction, so a damaged or unreadable backup never costs the data already here.
+ */
 export async function importBackup(file: File) {
-  let data: BackupFile
+  let data: unknown
   try {
     data = JSON.parse(await file.text())
   } catch {
-    throw new Error('That file isn’t a backup — it couldn’t be read.')
+    throw new Error('That file isn’t a backup. It couldn’t be read, and nothing here was changed.')
   }
-  if (data?.app !== 'afterimage' || data.version !== 1 || !data.stores) throw new Error('That file isn’t an Afterimage backup.')
-  for (const s of [...STORES, 'blobs'] as StoreName[]) await db.clear(s)
-  for (const s of STORES) for (const [k, v] of data.stores[s] ?? []) await db.put(s, k, v)
-  for (const [id, type, b64] of data.blobs ?? []) await db.put('blobs', id, fromBase64(b64, type))
+  if (!isBackup(data)) throw new Error('That file isn’t an Afterimage backup. Nothing here was changed.')
+  let blobs: [string, Blob][]
+  try {
+    blobs = (data.blobs ?? []).map(([id, type, b64]) => [id, fromBase64(b64, type)])
+  } catch {
+    throw new Error('This backup is damaged: a photo inside it can’t be read. Nothing here was changed.')
+  }
+  const stores: Partial<Record<StoreName, [string, unknown][]>> = { blobs }
+  for (const s of STORES) stores[s] = data.stores[s] ?? []
+  try {
+    await db.replaceAll(stores)
+  } catch {
+    throw new Error('The backup couldn’t be restored, so nothing here was changed. If the device is nearly full, free some space and try again.')
+  }
   return { memories: data.stores.memories?.length ?? 0, photos: data.stores.shoebox?.length ?? 0, letters: data.stores.letters?.length ?? 0 }
 }
 

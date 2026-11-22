@@ -109,7 +109,9 @@ def main():
     done = failed = 0
     for it in items:
         out = os.path.join(ROOT, it["path"])
-        if os.path.exists(out) and not a.force:
+        # scrapbook PNGs ship as transparent WebP cut-outs (scripts/cutout_scrap.py): either counts as done
+        exists = os.path.exists(out) or (out.endswith(".png") and os.path.exists(out[:-4] + ".webp"))
+        if exists and not a.force:
             continue
         if a.limit and done >= a.limit:
             break

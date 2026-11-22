@@ -67,7 +67,7 @@ export function useStranger() {
 }
 export const strangerState = () => state
 if (typeof window !== 'undefined')
-  window.addEventListener('afterimage:erased', () => set({ profile: undefined, queue: [], history: emptyHistory(), rounds: [] }))
+  window.addEventListener('afterimage:erased', () => set({ prefs: { includeDemo: false }, profile: undefined, queue: [], history: emptyHistory(), rounds: [], log: [] }))
 export function keysChanged() {
   set({ keysVersion: state.keysVersion + 1 })
 }

@@ -20,14 +20,14 @@ import {
 } from '../lib/stranger/engine'
 import { REAL_PER_ROUND } from '../lib/stranger/game'
 import { ConfirmButton } from './common'
-import { longDate } from '../lib/time'
+import { isoDate, longDate } from '../lib/time'
 import { toast } from '../lib/toast'
 
 function useKeys() {
   return useSyncExternalStore(onKeysChange, () => JSON.stringify(getKeys()))
 }
 
-const when = (t: number) => `${longDate(new Date(t).toISOString().slice(0, 10))}, ${new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+const when = (t: number) => `${longDate(isoDate(new Date(t)))}, ${new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
 
 export function KeysPanel() {
   const keys: string[] = JSON.parse(useKeys())

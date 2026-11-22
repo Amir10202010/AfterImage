@@ -20,9 +20,9 @@ describe('POST /api/imagine', () => {
     vi.unstubAllEnvs()
   })
 
-  it('rejects other sites', async () => {
-    const r = await POST(req({ story: 'x'.repeat(40) }, { origin: 'https://evil.example' }))
-    expect(r.status).toBe(403)
+  it('rejects other sites, and scripts that send no Origin', async () => {
+    expect((await POST(req({ story: 'x'.repeat(40) }, { origin: 'https://evil.example' }))).status).toBe(403)
+    expect((await POST(req({ story: 'x'.repeat(40) }))).status).toBe(403)
   })
 
   it('falls through to the next Gemini key on 429, sends keys only in headers, returns the image', async () => {
@@ -38,7 +38,7 @@ describe('POST /api/imagine', () => {
       }
       return new Response(new Uint8Array([1, 2, 3]), { headers: { 'content-type': 'image/jpeg' } })
     })
-    const r = await POST(req({ story: 'We sat on the bench in the park all afternoon.' }, { 'x-forwarded-for': '10.0.0.1' }))
+    const r = await POST(req({ story: 'We sat on the bench in the park all afternoon.' }, { origin: 'http://app.test', 'x-forwarded-for': '10.0.0.1' }))
     expect(r.status).toBe(200)
     expect(r.headers.get('content-type')).toBe('image/jpeg')
     expect(decodeURIComponent(r.headers.get('x-imagine-prompt')!)).toBe('a bench under linden trees')
@@ -49,9 +49,25 @@ describe('POST /api/imagine', () => {
     for (const c of calls) expect(c.url).not.toMatch(/g1|g2|sk_test/)
   })
 
-  it('says it is not set up when no image key exists', async () => {
+  it('says it is not set up when a key is missing', async () => {
     vi.stubEnv('POLLINATIONS_API_KEY', '')
-    const r = await POST(req({ story: 'A long enough story about the day.' }, { 'x-forwarded-for': '10.0.0.2' }))
+    vi.stubEnv('GEMINI_API_KEYS', 'g1')
+    const r = await POST(req({ story: 'A long enough story about the day.' }, { origin: 'http://app.test', 'x-forwarded-for': '10.0.0.2' }))
     expect(r.status).toBe(503)
+  })
+
+  it('never sends the diary text to the image service when Gemini fails', async () => {
+    vi.stubEnv('GEMINI_API_KEYS', 'g1')
+    vi.stubEnv('POLLINATIONS_API_KEY', 'sk_test')
+    const urls: string[] = []
+    vi.stubGlobal('fetch', async (url: string) => {
+      urls.push(url)
+      return new Response('{}', { status: 500 })
+    })
+    const story = 'Mira and I talked about the move until the lamps came on.'
+    const r = await POST(req({ story }, { origin: 'http://app.test', 'x-forwarded-for': '10.0.0.3' }))
+    expect(r.status).toBe(502)
+    expect(urls.some((u) => u.includes('pollinations'))).toBe(false)
+    for (const u of urls) expect(decodeURIComponent(u)).not.toContain('Mira')
   })
 })
