@@ -7,7 +7,6 @@ import { ConfirmButton } from '../components/common'
 import { bytes, downloadBlob, exportBackup, importBackup, storageInfo } from '../lib/backup'
 import { todayISO } from '../lib/time'
 import { toast } from '../lib/toast'
-import StrangerAI from '../components/StrangerAI'
 
 const I: Record<string, ReactNode> = {
   backup: <path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14" />,
@@ -151,7 +150,7 @@ export default function Settings() {
         <div className="set-hero-top">
           <span className="set-hero-k">
             <Icon name="shield" />
-            Everything stays in this browser. Nothing is uploaded.
+            Everything stays in this browser. Only The Stranger, and drawing a picture from your words if you turn it on, send text to Google Gemini.
           </span>
           {store &&
             (store.persisted ? (
@@ -225,15 +224,6 @@ export default function Settings() {
             </a>
           </Row>
         </ul>
-      </section>
-
-      <section className="set-group" aria-labelledby="g-stranger" id="stranger">
-        <h2 id="g-stranger" className="set-h">
-          The Stranger
-        </h2>
-        <div className="set-card set-stranger">
-          <StrangerAI />
-        </div>
       </section>
 
       <section className="set-group" aria-labelledby="g-around">

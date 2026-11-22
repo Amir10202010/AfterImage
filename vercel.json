@@ -1,6 +1,7 @@
 {
   "functions": {
-    "api/imagine.ts": { "maxDuration": 60 }
+    "api/imagine.ts": { "maxDuration": 60 },
+    "api/stranger.ts": { "maxDuration": 60 }
   },
   "headers": [
     {

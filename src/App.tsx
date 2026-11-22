@@ -3,6 +3,8 @@ import { flushSync } from 'react-dom'
 import { useStore } from './lib/store'
 import Palette from './components/Palette'
 import Toaster from './components/Toaster'
+import Agreement from './components/Agreement'
+import { agreed, onAgree } from './lib/agreement'
 
 const hashRef = { current: window.location.hash.slice(1) || '/' }
 import Memories from './views/Home'
@@ -106,6 +108,10 @@ export default function App() {
   const [path, query = ''] = route.split('?')
   const [, name = '', arg, arg2] = path.split('/')
   const params = new URLSearchParams(query)
+  // the terms, accepted once on entering the app (the landing page and the legal pages stay readable)
+  const [hasAgreedNow, setAgreedNow] = useState(agreed)
+  useEffect(() => onAgree(() => setAgreedNow(true)), [])
+  const needsAgreement = !hasAgreedNow && !['', 'welcome', 'privacy', 'terms'].includes(name)
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -227,7 +233,8 @@ export default function App() {
     <>
       {error && <div className="banner-error" role="alert">{error}</div>}
       <Suspense fallback={<div className="room-wait" aria-busy="true" />}>{tab === null ? view : <Shell tab={tab}>{view}</Shell>}</Suspense>
-      {name !== '' && name !== 'welcome' && <Palette />}
+      {name !== '' && name !== 'welcome' && !needsAgreement && <Palette />}
+      {needsAgreement && <Agreement />}
       <Toaster />
     </>
   )

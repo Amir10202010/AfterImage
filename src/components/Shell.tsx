@@ -2,6 +2,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { letterStatus, useStore } from '../lib/store'
 import Tour, { tourDone } from './Tour'
+import { agreed, onAgree } from '../lib/agreement'
 import { openPalette } from './Palette'
 
 // where you were before opening Settings, so the same button (or Esc) takes you back there
@@ -72,6 +73,9 @@ export default function Shell({ tab, children }: { tab: Tab; children: ReactNode
   const { letters } = useStore()
   const [sheet, setSheet] = useState(false)
   const [tour, setTour] = useState(() => !tourDone())
+  // the tour waits until the terms are accepted, so the two never stack
+  const [agreedNow, setAgreedNow] = useState(agreed)
+  useEffect(() => onAgree(() => setAgreedNow(true)), [])
   const unread = letters.filter((l) => letterStatus(l) === 'arrived').length
   const inSettings = window.location.hash.startsWith('#/settings')
 
@@ -199,7 +203,7 @@ export default function Shell({ tab, children }: { tab: Tab; children: ReactNode
         </div>
       )}
 
-      {tour && <Tour onDone={() => setTour(false)} />}
+      {tour && agreedNow && <Tour onDone={() => setTour(false)} />}
     </div>
   )
 }

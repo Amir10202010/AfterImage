@@ -328,7 +328,7 @@ export function Colophon() {
     <footer className="colophon">
       <p>
         <strong>Afterimage</strong> keeps everything on this device, in your browser’s storage. Nothing is uploaded unless
-        you turn on one of the two AI extras. The reader that suggests moments and words works offline and only ever quotes
+        you play The Stranger or turn on drawing a picture from your words. The reader that suggests moments and words works offline and only ever quotes
         what you wrote; anything written by the app is marked <span className="app-mark">◇</span>.
       </p>
       <p>

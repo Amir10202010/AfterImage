@@ -2,6 +2,7 @@
 // Used in Settings (everything) and inside the game when something is still missing.
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import '../stranger.css'
+import { agreed } from '../lib/agreement'
 import { GEMINI_MODELS, addKeys, getCursor, getKeys, maskKey, onKeysChange, removeKey, replaceKey, testKey } from '../lib/gemini'
 import {
   BATCH,
@@ -182,11 +183,12 @@ export function ConsentPanel() {
 
 export function ProfilePanel() {
   const { profile, prefs, busy, progress } = useStranger()
-  const keys = getKeys().length
-  const can = !!prefs.consentAt && keys > 0 && !busy
+  // the keys are the project's (on the server); consent is the agreement accepted on entering the app
+  const ok = agreed() || !!prefs.consentAt
+  const can = ok && !busy
   const n = realCount()
   const stale = profileStaleness()
-  const why = !keys ? 'Add a key first.' : !prefs.consentAt ? 'Agree to the note above first.' : n < REAL_PER_ROUND ? `Only ${n} usable passages so far.` : null
+  const why = !ok ? 'Accept the terms first.' : n < REAL_PER_ROUND ? `Only ${n} usable passages so far.` : null
   return (
     <div className="sai-block">
       <h3 className="sai-h">Your writing profile</h3>
@@ -224,7 +226,7 @@ export function ProfilePanel() {
 export function QueuePanel() {
   const { queue, busy, profile, prefs, log } = useStranger()
   const open = unused(queue).length
-  const can = !!profile && !!prefs.consentAt && getKeys().length > 0 && !busy
+  const can = !!profile && (agreed() || !!prefs.consentAt) && !busy
   const recent = log.slice(-5).reverse()
   return (
     <div className="sai-block">

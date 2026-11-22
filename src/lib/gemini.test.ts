@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { GeminiError, MAX_ATTEMPTS, addKeys, classify, generateJson, getCursor, getKeys, maskKey, parseKeys, removeKey, replaceKey, scrub, setKeyStorage, setKeys, setTransport, type Call, type KVStore } from './gemini'
+import { GeminiError, MAX_ATTEMPTS, addKeys, forgetBrowserKeys, classify, generateJson, getCursor, getKeys, maskKey, parseKeys, removeKey, replaceKey, scrub, setKeyStorage, setKeys, setTransport, type Call, type KVStore } from './gemini'
 
 const A = 'AIzaSyA_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
 const B = 'AIzaSyB_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
@@ -79,9 +79,18 @@ describe('round-robin rotation', () => {
 })
 
 describe('failures', () => {
-  it('needs a key before anything is sent', async () => {
+  it('with no key in this browser, asks the server (which holds the project’s keys)', async () => {
+    await expect(generateJson(ok)).resolves.toEqual({ ok: true })
+    expect(calls).toHaveLength(1)
+    expect(calls[0].key).toBe('')
+  })
+
+  it('stops at once when the server has no keys either', async () => {
+    answer(() => {
+      throw new GeminiError('no-keys', 503)
+    })
     await expect(generateJson(ok)).rejects.toMatchObject({ kind: 'no-keys' })
-    expect(calls).toHaveLength(0)
+    expect(calls).toHaveLength(1)
   })
 
   it('falls through an invalid key to the next one', async () => {
@@ -162,5 +171,15 @@ describe('failures', () => {
     const e = classify(Object.assign(new Error(`bad request for key=${A} (${A})`), { status: 400 }))
     expect(e.message).not.toContain(A)
     expect(scrub(`https://x/y?key=${A}&a=1 ${A}`)).not.toContain(A)
+  })
+})
+
+describe('keys left from an older version', () => {
+  it('are forgotten, so the game always goes through the server', async () => {
+    setKeys([A])
+    forgetBrowserKeys()
+    expect(getKeys()).toEqual([])
+    await generateJson(ok)
+    expect(calls.at(-1)?.key).toBe('')
   })
 })
