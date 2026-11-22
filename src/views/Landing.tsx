@@ -412,7 +412,7 @@ export default function Landing() {
             <button type="button" className="l-btn l-btn-dark" onClick={enter} data-magnetic>
               <span>Open the darkroom</span>
             </button>
-            <p className="l-fine dark">Three fictional demo days are inside, so you can try everything first.</p>
+            <p className="l-fine dark">Five fictional demo days are inside, so you can try everything first.</p>
           </div>
         </section>
       </Morph>
