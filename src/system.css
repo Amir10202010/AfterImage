@@ -485,26 +485,31 @@ html[data-room='dark'] body {
   overflow-wrap: break-word;
 }
 
-/* ---------- a letter arrives on the site's own paper ----------
-   The arrival screen used to put pale linen sheets on the darkroom's near-black. It now stands on the
-   same ivory as every other page: the room's --dr-* colours are mapped onto the site's tokens, so its
-   header, notes, chips and buttons follow, and the linen letters sit on it like they do in Letters. */
+/* ---------- a letter arrives on beige paper ----------
+   The whole screen is the aged paper the letters live in (the same palette and texture as the letters'
+   folder, .dark-slab): the room's --dr-* colours are mapped onto it, so the header, notes, chips and
+   buttons follow. Each sheet is a shade lighter with a soft shadow, a page lying on a desk. */
 main.darkroom.arrival {
-  --dr-bg: var(--ivory);
-  --dr-bg-2: var(--cream);
-  --dr-ink: var(--ink);
-  --dr-muted: var(--ink-3);
-  --dr-rule: var(--rule);
-  --dr-accent: var(--burgundy, #7a2e2e);
-  --dr-glow: transparent;
-  background: var(--ivory);
-  color: var(--ink);
+  --dr-bg: #ebe0cb;
+  --dr-bg-2: #e1d3ba;
+  --dr-ink: #2b231c;
+  --dr-muted: #65584a;
+  --dr-rule: rgb(43 35 28 / 0.16);
+  --dr-accent: #8e4429;
+  --dr-glow: rgb(255 246 226 / 0.75);
+  background:
+    radial-gradient(ellipse 70% 50% at 50% -5%, var(--dr-glow), transparent 70%),
+    var(--dr-bg) url('/demo/textures/paper-ivory.jpg') center / 640px auto;
+  background-blend-mode: normal, multiply;
+  color: var(--dr-ink);
 }
 main.darkroom.arrival .letter {
+  background: #f8f2e6;
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent),
-    0 18px 36px -26px rgb(60 40 20 / 0.45);
+    0 1px 0 rgb(43 35 28 / 0.06),
+    0 18px 36px -26px rgb(60 40 20 / 0.55);
 }
 main.darkroom.arrival .composer-text {
-  box-shadow: inset 0 0 0 1px var(--rule);
+  background-color: #f8f2e6;
+  box-shadow: inset 0 0 0 1px var(--dr-rule);
 }
