@@ -484,3 +484,58 @@ html[data-room='dark'] body {
 .letter-p {
   overflow-wrap: break-word;
 }
+
+/* ---------- a letter arrives in the darkroom ----------
+   The room is dark, so the letter is too: dark paper from the room's own palette, with the same linen
+   grain, light ink. (Pale sheets on the near-black used to read as two different screens; the night
+   print already keeps its letters on the dark the same way.) */
+main.darkroom.arrival .letter {
+  background: var(--dr-bg-2) url('/demo/textures/linen.jpg') center / 460px auto;
+  background-blend-mode: multiply;
+  color: var(--dr-ink);
+  box-shadow:
+    inset 0 0 0 1px var(--dr-rule),
+    0 30px 50px -36px rgb(0 0 0 / 0.9);
+}
+main.darkroom.arrival .letter-head {
+  color: var(--dr-muted);
+  border-bottom-color: var(--dr-rule);
+}
+main.darkroom.arrival .letter-toggle {
+  border-bottom: 0;
+}
+main.darkroom.arrival .reader-next {
+  border-color: color-mix(in srgb, var(--dr-ink) 35%, transparent);
+  color: var(--dr-ink);
+}
+main.darkroom.arrival .reader-next:hover {
+  border-color: var(--dr-ink);
+}
+main.darkroom.arrival .reader-count {
+  color: var(--dr-muted);
+}
+/* the answer is written on the same dark paper, with the same ruling, in the room's own tones */
+main.darkroom.arrival .composer-text {
+  color: var(--dr-ink);
+  caret-color: var(--dr-accent);
+  background-color: var(--dr-bg-2);
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 30px, var(--dr-rule) 30px 31px),
+    url('/demo/textures/linen.jpg');
+  background-size:
+    auto,
+    460px auto;
+  background-position:
+    0 14px,
+    center;
+  background-blend-mode: normal, multiply;
+  box-shadow: inset 0 0 0 1px var(--dr-rule);
+}
+main.darkroom.arrival .composer-text::placeholder {
+  color: color-mix(in srgb, var(--dr-ink) 45%, transparent);
+}
+main.darkroom.arrival .composer-text:focus {
+  box-shadow:
+    inset 0 0 0 1px var(--dr-rule),
+    0 0 0 2px var(--dr-accent);
+}
