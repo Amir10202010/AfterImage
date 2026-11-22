@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { deleteLetter, letterStatus, saveLetter, useStore } from '../lib/store'
 import type { Letter, Memory } from '../lib/types'
 import { longDate, until } from '../lib/time'
-import { AppVoice, Back, ConfirmButton } from '../components/common'
+import { AppVoice, ConfirmButton } from '../components/common'
 import { ReadLetter, ReplyComposer, SealedLetter } from '../components/Conversation'
 import { OptionalImg } from '../components/Scrap'
 import { hrefFor, useNow } from './Home'
@@ -29,9 +29,6 @@ export default function Letters({ write }: { write?: string }) {
 
   return (
     <main className="paper letters-page">
-      <header className="print-bar">
-        <Back href="#/today">Today</Back>
-      </header>
       <header className="letters-head">
         <p className="kicker">Correspondence</p>
         <h1 className="print-title">Letters between the people you’ve been.</h1>

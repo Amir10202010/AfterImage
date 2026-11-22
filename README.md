@@ -21,7 +21,30 @@ npm test
 npm run build
 ```
 
-There's no backend and no API key. Everything (memories, photographs, audio, letters, progress) lives in the browser's IndexedDB on your device.
+Everything (memories, photographs, audio, letters, progress) lives in the browser's IndexedDB on your device.
+
+### Pictures drawn from your words (optional)
+
+While you write a new day, Afterimage can draw a picture of it. The only server code is `api/imagine.ts` (a Vercel function; `npm run dev` serves the same handler locally): Gemini turns the story into a scene description, Pollinations draws it, and the image goes straight back to the browser, which crops off the bottom strip and saves it with the memory on the device. The server stores nothing. The writer can turn it off under the story box.
+
+1. Copy `.env.example` to `.env` and fill in `GEMINI_API_KEYS` (comma separated, rotated per request) and `POLLINATIONS_API_KEY` (`sk_…` from enter.pollinations.ai).
+2. On Vercel, add the same variables in Project Settings → Environment Variables.
+
+Never prefix these with `VITE_`: that would put them in the public bundle.
+
+The starting demo photos come from `PHOTO_PROMPTS.json`: `python scripts/gen_photos.py` fills in any that are missing in `public/demo/`.
+
+### The Stranger (optional, your own Gemini key)
+
+The game runs in the browser with **your own** Gemini API keys (BYOK) — the server keys above are not used, and there's no backend for it.
+
+1. Settings → **The Stranger · AI configuration** (or **AI settings** on the game screen).
+2. Paste one or more keys from <https://aistudio.google.com/apikey> (commas or new lines). Each request uses the next key in order — 1, 2, 3, 1… — and the position survives reloads. Free-tier limits are per Google Cloud project, so keys from one project share one quota.
+3. Tick the consent box. It lists exactly what is sent: passages you wrote (tagged names masked as `[name]`), never photos, exact dates, sealed letters or keys.
+4. **Build my writing profile** (a representative sample, one request) or **Use whole archive** (batches of ~14k characters, max 8, then a merge). The profile is cached on the device; **Refresh** folds in only new writing.
+5. Press **Play Stranger**. Impostor lines are written ten per request, checked (no copies or near-copies of your writing, no archive names, dates, AI clichés, odd lengths or languages you never use) and queued in IndexedDB; the queue tops itself up in the background below four.
+
+Keys live in `localStorage` only and never enter backups; the profile, queue, played rounds and request metadata live in IndexedDB (`meta` store, `stranger:*`). Model: `gemini-3.5-flash-lite` (fallback `gemini-3.6-flash`), set in `src/lib/gemini.ts`. Code: `src/lib/gemini.ts` (client, rotation, errors), `src/lib/stranger/` (fragments, game rules, style profile & validation, engine), `src/views/Stranger.tsx`, `src/components/StrangerAI.tsx`.
 
 ## What's inside
 
@@ -42,7 +65,7 @@ There's no backend and no API key. Everything (memories, photographs, audio, let
 | Expose `#/new` | Five frames: story → photos & song → context → *what we noticed* (an editable review of everything the reader extracted) → a letter forward |
 | Correspondence `#/letters` | Every letter grouped by day; write to a future you or to a past you; a letter can be edited for 24 hours after you write it |
 | Enlarger `#/double/:a/:b` | **Double exposure.** Drag one day's frame over another's. Shared people, places, songs, seasons and words come through as they line up, each word shown in both original sentences. Caption it and keep it |
-| Test strip `#/strip` | **Daily.** One of your sentences comes back without its date. Expose months on a strip of your life (five tries; clues come from your own records) |
+| The Stranger `#/stranger` | **Find the one who isn't you.** Six frames on a contact sheet: five passages you wrote, one Gemini wrote in your style. Hold a frame for 0.8 s to accuse it; three accusations. A real passage develops and shows its date, source and photo; the impostor stays a negative under the red safelight. Play round after round. Old `#/strip` links land here |
 | Connect `#/connect` | **Bring photos in, on this device.** Pick photos or a whole folder from your gallery: the date and GPS come from inside each photo (EXIF). Or open **your own Instagram data export** (ZIP or unzipped folder): posts and archived stories, with dates and captions. Nothing is uploaded |
 | Journal `#/journal/:yyyy-mm` | A month board: a photo on every day you kept one, your captions in handwriting, a polaroid of the fullest day, a sticky note. Undeveloped memories show as negatives |
 | Page `#/page/:date` | A traveler's-notebook spread for one day, laid out automatically with instax frames, tickets, a song tag, stamped letters and washi tape. Drag, rotate and resize; add notes, tape and stickers. Saved as you go. **Turn this day into a memory** sends it to the darkroom with its photos and captions |

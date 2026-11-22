@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { eraseEverything, letterStatus, restoreDemos, updateMemory, useStore } from '../lib/store'
-import { ago, longDate, monthYear, until, year } from '../lib/time'
+import { eraseEverything, restoreDemos, updateMemory, useStore } from '../lib/store'
+import { ago, longDate, monthYear, year } from '../lib/time'
 import type { Exposure, Letter, Memory, Stamp } from '../lib/types'
 import Photo, { fadeOf } from '../components/Photo'
-import { pickStrip, stripGlyphs } from './Strip'
+import { loadStranger, useStranger } from '../lib/stranger/engine'
+import { stats as strangerStats } from '../lib/stranger/game'
 import { connections } from '../lib/connect'
 import { OptionalImg, ScrapPhoto } from '../components/Scrap'
 import { dayIndex, dayPhotos } from '../lib/journal'
@@ -32,9 +33,7 @@ export function hrefFor(m: Memory) {
 
 /** Memories: every saved day on the drying line, and what's still open about them. */
 export default function Memories() {
-  const { memories, letters, exposures } = useStore()
-  const now = useNow()
-  const sealed = letters.filter((l) => letterStatus(l, now) === 'sealed').sort((a, b) => a.sealedUntil!.localeCompare(b.sealedUntil!))
+  const { memories, exposures } = useStore()
   const developed = memories.filter((m) => m.progress.developedAt).length
   const [q, setQ] = useState('')
   const [show, setShow] = useState<Show>('all')
@@ -66,23 +65,18 @@ export default function Memories() {
         <h1 className="page-title">Memories</h1>
         <span className="page-head-actions">
           {memories.length > 1 && (
-            <a className="btn btn-ghost-ink btn-sm surprise" href={randomMemoryHref(memories)} title="Open a random memory (r)" aria-label="Surprise me — open a random memory">
-              ⟳<span className="surprise-label"> Surprise me</span>
+            <a className="link surprise" href={randomMemoryHref(memories)} title="Open a random memory (r)">
+              Surprise me
             </a>
           )}
-          <a className="btn btn-ink btn-sm" href="#/new">
-            + Save a day
-          </a>
         </span>
       </header>
-
-      {memories.length > 0 && <Stats memories={memories} />}
 
       <section className="section first" aria-labelledby="line-h">
         <div className="section-head">
           <h2 id="line-h">The drying line</h2>
           <p className="section-meta">
-            {memories.length} {memories.length === 1 ? 'negative' : 'negatives'} · {developed} developed · tap one to develop it
+            {memories.length} {memories.length === 1 ? 'day' : 'days'} · {developed} developed
           </p>
         </div>
         {memories.length > 2 && (
@@ -120,32 +114,6 @@ export default function Memories() {
 
       <Threads memories={memories} />
 
-      {sealed.length > 0 && (
-        <section className="section" aria-labelledby="post-h">
-          <div className="section-head">
-            <h2 id="post-h">In the post</h2>
-            <p className="section-meta">Sealed. Nobody can open these early — not even you.</p>
-          </div>
-          <ul className="post">
-            {sealed.map((l) => (
-              <li key={l.id} className="post-item">
-                <span className="wax" aria-hidden="true">
-                  A
-                </span>
-                <span className="post-text">
-                  <span className="post-when">Opens {until(l.sealedUntil!, now)}</span>
-                  <span className="post-from">
-                    Written {longDate(l.writtenAt)}
-                    {l.memoryId && <> · {memories.find((m) => m.id === l.memoryId)?.title}</>}
-                  </span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <Contents memories={memories} />
     </main>
   )
 }
@@ -182,56 +150,6 @@ const SHOWS: [Show, string][] = [
 function showOf(m: Memory): Exclude<Show, 'all'> {
   if (!m.progress.developedAt) return 'negative'
   return fadeOf(m) > 0.15 ? 'fading' : 'developed'
-}
-
-/** A small ledger of what's been kept: days, photos, the longest run, the busiest month. */
-function Stats({ memories }: { memories: Memory[] }) {
-  const { shoebox, letters } = useStore()
-  const s = useMemo(() => {
-    const days = new Set([...memories.map((m) => m.date), ...shoebox.map((x) => x.date)])
-    const sorted = [...days].sort()
-    let best = 0
-    let run = 0
-    let prev = 0
-    for (const d of sorted) {
-      const t = new Date(d + 'T12:00').getTime()
-      run = prev && Math.round((t - prev) / 86400000) === 1 ? run + 1 : 1
-      best = Math.max(best, run)
-      prev = t
-    }
-    const byMonth = new Map<string, number>()
-    for (const d of sorted) byMonth.set(d.slice(0, 7), (byMonth.get(d.slice(0, 7)) ?? 0) + 1)
-    const top = [...byMonth.entries()].sort((a, b) => b[1] - a[1])[0]
-    const people = new Set(memories.flatMap((m) => m.people)).size
-    return { days: days.size, best, top, people }
-  }, [memories, shoebox])
-  const cells: [string | number, string, string?][] = [
-    [s.days, s.days === 1 ? 'day kept' : 'days kept'],
-    [shoebox.length, 'photographs', '#/journal'],
-    [s.best, s.best === 1 ? 'day in a row, at best' : 'days in a row, at best'],
-    [s.people, s.people === 1 ? 'person in your days' : 'people in your days'],
-    [letters.length, letters.length === 1 ? 'letter' : 'letters', '#/letters'],
-  ]
-  if (s.top) cells.push([monthYear(s.top[0] + '-01').split(' ')[0].slice(0, 3) + ' ’' + s.top[0].slice(2, 4), 'your fullest month', `#/journal/${s.top[0]}`])
-  return (
-    <ul className="stats" aria-label="What you’ve kept">
-      {cells.map(([n, label, href]) => (
-        <li key={label}>
-          {href ? (
-            <a href={href}>
-              <b>{n}</b>
-              <span>{label}</span>
-            </a>
-          ) : (
-            <span className="stat">
-              <b>{n}</b>
-              <span>{label}</span>
-            </span>
-          )}
-        </li>
-      ))}
-    </ul>
-  )
 }
 
 function DryingLine({ memories, grouped = true }: { memories: Memory[]; grouped?: boolean }) {
@@ -326,7 +244,7 @@ export function Threads({ memories }: { memories: Memory[] }) {
     <section className="section" aria-labelledby="threads-h">
       <div className="section-head">
         <h2 id="threads-h">Unfinished threads</h2>
-        <p className="section-meta">Things you once meant to do, or asked and never answered.</p>
+        <p className="section-meta">What you meant to do, or asked and never answered.</p>
       </div>
       <ul className="threads">
         {shown.map(({ m, t }) => (
@@ -341,33 +259,7 @@ export function Threads({ memories }: { memories: Memory[] }) {
           </li>
         ))}
       </ul>
-      {open.length > 3 && <p className="section-meta">and {open.length - 3} more, waiting inside their days.</p>}
-    </section>
-  )
-}
-
-function Contents({ memories }: { memories: Memory[] }) {
-  if (!memories.length) return null
-  return (
-    <section className="section contents" aria-labelledby="contents-h">
-      <div className="section-head">
-        <h2 id="contents-h">Contents</h2>
-      </div>
-      <ol className="toc">
-        {[...memories].reverse().map((m) => {
-          const s = devState(m)
-          return (
-            <li key={m.id}>
-              <a href={hrefFor(m)}>
-                <span className="toc-date">{longDate(m.date)}</span>
-                <span className="toc-title">{m.title}</span>
-                <span className="toc-dots" aria-hidden="true" />
-                <span className="toc-status">{s.developed ? 'print' : 'negative'}</span>
-              </a>
-            </li>
-          )
-        })}
-      </ol>
+      {open.length > 3 && <p className="section-meta">And {open.length - 3} more inside their days.</p>}
     </section>
   )
 }
@@ -400,8 +292,12 @@ export function Colophon() {
   )
 }
 
-export function Rituals({ memories, exposures, strip, today }: { memories: Memory[]; exposures: Exposure[]; strip?: import('../lib/types').StripResult; today: string }) {
-  const pick = useMemo(() => pickStrip(memories, today), [memories, today])
+export function Rituals({ memories, exposures, today }: { memories: Memory[]; exposures: Exposure[]; today: string }) {
+  const stranger = useStranger()
+  useEffect(() => {
+    loadStranger()
+  }, [])
+  const st = strangerStats(stranger.rounds)
   const best = useMemo(() => {
     let top: { a: Memory; b: Memory; n: number } | null = null
     for (let i = 0; i < memories.length; i++)
@@ -414,31 +310,20 @@ export function Rituals({ memories, exposures, strip, today }: { memories: Memor
       }
     return top
   }, [memories, exposures])
-  const played = strip && pick && strip.memoryId === pick.m.id && strip.sentence === pick.s
   return (
     <section className="today" aria-label="Today">
-      {pick && (
-        <a className="today-card today-strip" href="#/strip">
-          <span className="today-k">Today’s test strip</span>
-          <span className="today-q">“{pick.s.length > 90 ? pick.s.slice(0, 88) + '…' : pick.s}”</span>
-          <span className="today-meta">
-            {played && strip!.done ? (
-              <>
-                <span className="today-glyphs">{stripGlyphs(strip!)}</span> {strip!.solved ? 'found' : 'not this time'} · new one tomorrow
-              </>
-            ) : played ? (
-              `${5 - strip!.guesses.length} exposures left`
-            ) : (
-              'When did you write this? Five exposures to find out.'
-            )}
-          </span>
-          <span className="today-strip-film" aria-hidden="true">
-            {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
-              <i key={i} style={{ opacity: 0.12 + i * 0.11 }} />
-            ))}
-          </span>
-        </a>
-      )}
+      <a className="today-card today-strip" href="#/stranger">
+        <span className="today-k">The Stranger</span>
+        <span className="today-q">Five fragments from your past. One that never happened.</span>
+        <span className="today-meta">
+          {st.played > 0 ? `${st.played} ${st.played === 1 ? 'round' : 'rounds'} · ${Math.round(st.rate * 100)}% recognised` : 'Find the one who isn’t you.'}
+        </span>
+        <span className="today-strip-film" aria-hidden="true" style={{ gridTemplateColumns: 'repeat(6, 1fr)' }}>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <i key={i} style={{ opacity: i === 3 ? 1 : 0.12 + i * 0.11, background: i === 3 ? 'var(--burgundy)' : undefined }} />
+          ))}
+        </span>
+      </a>
       {memories.length >= 2 && (
         <a className="today-card today-double" href={best && best.n > 0 ? `#/double/${best.a.id}/${best.b.id}` : '#/double'}>
           <span className="today-k">The enlarger</span>
@@ -453,7 +338,7 @@ export function Rituals({ memories, exposures, strip, today }: { memories: Memor
           <span className="today-q today-q-sans">
             {best && best.n > 0 ? (
               <>
-                <em>{best.a.title}</em> and <em>{best.b.title}</em> share {best.n === 1 ? 'something' : `${best.n} things`}. Lay one over the other to see what.
+                <em>{best.a.title}</em> and <em>{best.b.title}</em> share {best.n === 1 ? 'something' : `${best.n} things`}.
               </>
             ) : (
               'Lay two days over each other and see what they share.'
@@ -463,7 +348,7 @@ export function Rituals({ memories, exposures, strip, today }: { memories: Memor
       )}
       <a className="today-card today-music" href={`#/music/${today.slice(0, 7)}`}>
         <span className="today-k">The music box</span>
-        <span className="today-q today-q-sans">Hear this month — your photos’ colours punched into a paper strip. Turn the crank.</span>
+        <span className="today-q today-q-sans">This month, played by your photographs.</span>
         <span className="today-music-strip" aria-hidden="true">
           {Array.from({ length: 22 }, (_, k) => (
             <i key={k} style={{ top: `${18 + ((k * 37) % 60)}%`, left: `${4 + k * 4.4}%` }} />
@@ -516,7 +401,7 @@ export function JournalTeaser() {
       <div className="section-head">
         <h2 id="teaser-h">The journal</h2>
         <p className="section-meta">
-          {shoebox.length} photographs · {days.length} days · <a href="#/connect">connect your gallery or Instagram</a>
+          {shoebox.length} photographs · {days.length} days
         </p>
       </div>
       {recent.length ? (

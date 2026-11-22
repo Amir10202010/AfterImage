@@ -210,8 +210,16 @@ export default function MusicBox({ ym }: { ym?: string }) {
           </span>
         </div>
         <nav className="mb-months" aria-label="Months">
-          {idx > 0 && <a href={`#/music/${months[idx - 1]}`}>←</a>}
-          {idx >= 0 && idx < months.length - 1 && <a href={`#/music/${months[idx + 1]}`}>→</a>}
+          {idx > 0 && (
+            <a href={`#/music/${months[idx - 1]}`} aria-label="Previous month">
+              ←
+            </a>
+          )}
+          {idx >= 0 && idx < months.length - 1 && (
+            <a href={`#/music/${months[idx + 1]}`} aria-label="Next month">
+              →
+            </a>
+          )}
         </nav>
       </header>
 

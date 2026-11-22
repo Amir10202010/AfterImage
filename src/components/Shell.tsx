@@ -110,7 +110,7 @@ export default function Shell({ tab, children }: { tab: Tab; children: ReactNode
       <header className="topbar">
         <a className="brand" href="#/today" aria-label="Afterimage — Today">
           <img className="brand-mark" src="/favicon.svg" alt="" aria-hidden="true" />
-          Afterimage
+          <span className="brand-word">Afterimage</span>
         </a>
         <nav className="topnav" aria-label="Sections">
           {TABS.map(item)}
@@ -161,7 +161,7 @@ export default function Shell({ tab, children }: { tab: Tab; children: ReactNode
               </span>
               <span>
                 <b>Save a day</b>
-                <small>Write what happened, add photos and the song. It becomes a negative to develop later.</small>
+                <small>Write what happened. Develop it later.</small>
               </span>
             </a>
             <a className="sheet-option" href="#/connect" onClick={() => setSheet(false)}>
@@ -170,7 +170,7 @@ export default function Shell({ tab, children }: { tab: Tab; children: ReactNode
               </span>
               <span>
                 <b>Bring in photos</b>
-                <small>From your gallery or your Instagram export. They sort themselves into days in the Journal.</small>
+                <small>From your gallery or Instagram.</small>
               </span>
             </a>
             <a className="sheet-option" href="#/letters?write=future" onClick={() => setSheet(false)}>
@@ -179,7 +179,7 @@ export default function Shell({ tab, children }: { tab: Tab; children: ReactNode
               </span>
               <span>
                 <b>Write to future you</b>
-                <small>Seal a letter until a date. It can’t be opened early.</small>
+                <small>Sealed until the date you choose.</small>
               </span>
             </a>
             <button type="button" className="link sheet-close" onClick={() => setSheet(false)}>

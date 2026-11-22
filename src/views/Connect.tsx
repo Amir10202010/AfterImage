@@ -51,7 +51,8 @@ export default function Connect() {
           Read on this device. Nothing is uploaded.{' '}
           <InfoTip>
             Afterimage reads each photo right here, in this browser: the date it was taken, where, the caption you wrote. Then it sorts them into days. No
-            server, no account, no AI looking at your pictures.
+            server, no account, no AI looking at your pictures. There’s no “type a username” option on purpose: that would mean scraping someone’s
+            photos without them knowing. Your own Instagram export is more complete anyway.
           </InfoTip>
         </p>
         <OptionalImg src="/demo/ui/connect.jpg" className="connect-art" />
@@ -61,10 +62,7 @@ export default function Connect() {
         <section className="connect-card">
           <p className="kicker">Camera roll</p>
           <h2>Your gallery</h2>
-          <p>
-            On a phone, this opens your photo library — select a month, an album, or everything. On a computer you can pick a whole folder. Dates come
-            from inside each photo, so they land on the right day.
-          </p>
+          <p>A month, an album, or a whole folder. Each photo lands on the day it was taken.</p>
           <div className="row">
             <button type="button" className="btn btn-ink" disabled={!!job} onClick={() => photos.current?.click()}>
               Choose photos
@@ -102,12 +100,9 @@ export default function Connect() {
         <section className="connect-card connect-ig">
           <p className="kicker">Instagram</p>
           <h2>Your posts and stories</h2>
-          <p>
-            Instagram will give you a copy of everything you ever posted — including <strong>archived stories</strong> nobody else can see anymore — with dates
-            and your captions. Open the file it sends you here.
-          </p>
+          <p>Open the export Instagram sends you — every post and archived story, with your captions.</p>
           <details className="howto-ig">
-            <summary>How to get your export (about 5 minutes, then Instagram emails you)</summary>
+            <summary>How to get your export</summary>
             <ol>
               <li>Instagram → your profile → ☰ → <b>Accounts Center</b></li>
               <li>
@@ -153,10 +148,6 @@ export default function Connect() {
               if (fs.length) run('instagram', (p) => importInstagram(fs, p))
             }}
           />
-          <p className="connect-why">
-            Why not just type a username? Because that would mean scraping — collecting someone’s photos without them knowing, and breaking
-            Instagram’s rules. Your own export is more complete anyway.
-          </p>
         </section>
       </div>
 
