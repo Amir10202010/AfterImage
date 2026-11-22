@@ -16,6 +16,16 @@ function shiftMonth(ym: string, d: number) {
   return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}`
 }
 
+/** The month in rows of seven, so screen readers get a real grid; the rows use display: contents. */
+function weeks<T>(cells: T[]) {
+  const out: { c: T; i: number }[][] = []
+  cells.forEach((c, i) => {
+    if (i % 7 === 0) out.push([])
+    out[out.length - 1].push({ c, i })
+  })
+  return out
+}
+
 export default function Journal({ ym }: { ym?: string }) {
   const { memories, shoebox } = useStore()
   const days = useMemo(() => dayIndex(memories, shoebox), [memories, shoebox])
@@ -91,33 +101,39 @@ export default function Journal({ ym }: { ym?: string }) {
             {MONTHS[m - 1]} <small>{y}</small>
           </span>
         </div>
-        <div className="cal" role="grid">
-          {DOW.map((d) => (
-            <span key={d} className="cal-dow" role="columnheader">
-              {d}
-            </span>
+        <div className="cal" role="grid" aria-label={`${MONTHS[m - 1]} ${y}`}>
+          <div className="cal-row" role="row">
+            {DOW.map((d) => (
+              <span key={d} className="cal-dow" role="columnheader">
+                {d}
+              </span>
+            ))}
+          </div>
+          {weeks(cells).map((week, wk) => (
+            <div key={wk} className="cal-row" role="row">
+              {week.map(({ c, i }) => {
+                if (!c) return <span key={'x' + i} className="cal-cell cal-blank" role="gridcell" />
+                const dnum = Number(c.date.slice(8))
+                if ('empty' in c)
+                  return (
+                    <span key={c.date} className={`cal-cell ${c.date === today ? 'is-today' : ''}`} role="gridcell">
+                      <span className="cal-n">{dnum}</span>
+                    </span>
+                  )
+                const ph = dayPhotos(c)
+                const w = dayWords(c)
+                const mem = c.memories[0]
+                return (
+                  <a key={c.date} className={`cal-cell has-day ${ph.length ? 'has-photo' : ''}`} href={`#/page/${c.date}`} onClick={playPageTurn} role="gridcell" aria-label={`${dnum} ${MONTHS[m - 1]}: ${ph.length} photos${mem ? `, ${mem.title}` : ''}`}>
+                    {ph[0] ? <ScrapPhoto refId={ph[0].ref} negative={ph[0].negative} variant="cell" thumb /> : <span className="cal-words">{w[0]}</span>}
+                    <span className="cal-n">{dnum}</span>
+                    {ph.length > 1 && <span className="cal-more">+{ph.length - 1}</span>}
+                    {mem && <span className={`cal-mem ${mem.progress.developedAt ? 'is-dev' : ''}`} title={mem.progress.developedAt ? 'A developed memory' : 'An undeveloped negative'} />}
+                  </a>
+                )
+              })}
+            </div>
           ))}
-          {cells.map((c, i) => {
-            if (!c) return <span key={'x' + i} className="cal-cell cal-blank" role="gridcell" />
-            const dnum = Number(c.date.slice(8))
-            if ('empty' in c)
-              return (
-                <span key={c.date} className={`cal-cell ${c.date === today ? 'is-today' : ''}`} role="gridcell">
-                  <span className="cal-n">{dnum}</span>
-                </span>
-              )
-            const ph = dayPhotos(c)
-            const w = dayWords(c)
-            const mem = c.memories[0]
-            return (
-              <a key={c.date} className={`cal-cell has-day ${ph.length ? 'has-photo' : ''}`} href={`#/page/${c.date}`} onClick={playPageTurn} role="gridcell" aria-label={`${dnum} ${MONTHS[m - 1]}: ${ph.length} photos${mem ? `, ${mem.title}` : ''}`}>
-                {ph[0] ? <ScrapPhoto refId={ph[0].ref} negative={ph[0].negative} variant="cell" thumb /> : <span className="cal-words">{w[0]}</span>}
-                <span className="cal-n">{dnum}</span>
-                {ph.length > 1 && <span className="cal-more">+{ph.length - 1}</span>}
-                {mem && <span className={`cal-mem ${mem.progress.developedAt ? 'is-dev' : ''}`} title={mem.progress.developedAt ? 'A developed memory' : 'An undeveloped negative'} />}
-              </a>
-            )
-          })}
         </div>
         {best && bestPhoto && (
           <a className="board-polaroid" href={`#/page/${best.date}`} aria-label="The fullest day this month">

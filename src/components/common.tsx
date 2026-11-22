@@ -1,6 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { longDate } from '../lib/time'
+import { isoDate, longDate } from '../lib/time'
 import type { Stamp, Thread } from '../lib/types'
 import { QUESTION_STAMPS, STAMPS } from '../lib/prompts'
 
@@ -68,14 +68,18 @@ export function SealPicker({
     ['date', 'On a date I choose'],
     ['minute', 'In one minute — to try it'],
   ]
-  const min = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const min = isoDate(tomorrow)
+  // each picker is its own radio group, even when two are on screen at once
+  const name = useId()
   return (
     <fieldset className={`seal-picker ${dark ? 'is-dark' : ''}`}>
       <legend>Seal it until</legend>
       <div className="seal-options">
         {opts.map(([k, label]) => (
           <label key={k} className={`chip ${value === k ? 'is-on' : ''}`}>
-            <input type="radio" name="seal" value={k} checked={value === k} onChange={() => onChange(k, date)} />
+            <input type="radio" name={name} value={k} checked={value === k} onChange={() => onChange(k, date)} />
             {label}
           </label>
         ))}

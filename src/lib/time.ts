@@ -27,9 +27,13 @@ export function year(d: string) {
   return parse(d).getFullYear()
 }
 
-export function todayISO() {
-  const d = new Date()
+/** A local calendar date as YYYY-MM-DD (toISOString would give the UTC date, a day off near midnight). */
+export function isoDate(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+export function todayISO() {
+  return isoDate(new Date())
 }
 
 /** "3 years ago", "8 months ago", "yesterday" */

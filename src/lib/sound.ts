@@ -7,7 +7,8 @@ export const BPM: Record<Tempo, number> = { slow: 72, mid: 96, fast: 124 }
 
 const midi = (n: number) => 440 * Math.pow(2, (n - 69) / 12)
 
-type Profile = { tempo: Tempo; seed: string }
+/** bpm, when known, overrides the tempo's default; a minor song gets minor chords */
+type Profile = { tempo: Tempo; seed: string; bpm?: number; minor?: boolean }
 
 class Soundscape {
   private ctx?: AudioContext
@@ -53,8 +54,19 @@ class Soundscape {
     this.beat = 0
     this.nextBeat = ctx.currentTime + 0.1
     this.master!.gain.cancelScheduledValues(ctx.currentTime)
-    this.master!.gain.setTargetAtTime(p.tempo === 'fast' ? 0.5 : 0.6, ctx.currentTime, 0.8)
+    this.master!.gain.setTargetAtTime(this.level(), ctx.currentTime, 0.8)
     this.timer = window.setInterval(() => this.schedule(), 40)
+  }
+
+  private ducked = false
+  private level() {
+    return (this.profile?.tempo === 'fast' ? 0.5 : 0.6) * (this.ducked ? 0.35 : 1)
+  }
+
+  /** Lower the music while a voice reads over it. */
+  duck(on: boolean) {
+    this.ducked = on
+    if (this.ctx && this.master && this.playing) this.master.gain.setTargetAtTime(this.level(), this.ctx.currentTime, 0.3)
   }
 
   stop() {
@@ -75,7 +87,7 @@ class Soundscape {
   private schedule() {
     const ctx = this.ctx!
     const p = this.profile!
-    const spb = 60 / BPM[p.tempo]
+    const spb = 60 / Math.max(40, Math.min(200, p.bpm ?? BPM[p.tempo]))
     while (this.nextBeat < ctx.currentTime + 0.2) {
       this.play(this.beat, this.nextBeat, spb, p)
       this.nextBeat += spb
@@ -92,15 +104,15 @@ class Soundscape {
     const h = hash(p.seed + b)
     if (p.tempo === 'slow') {
       // Imaj7 – vi7 – IVmaj7 – V, a chord every 8 beats; sparse pentatonic notes on top
-      const prog = [[0, 4, 7, 11], [-3, 0, 4, 7], [-7, -3, 0, 4], [-5, -1, 2, 7]]
+      const prog = p.minor ? [[0, 3, 7, 10], [-4, 0, 3, 7], [-7, -4, 0, 3], [-5, -2, 2, 7]] : [[0, 4, 7, 11], [-3, 0, 4, 7], [-7, -3, 0, 4], [-5, -1, 2, 7]]
       if (b % 8 === 0) prog[(b / 8) % 4].forEach((n) => this.pad(root + n, t, spb * 8.4, 0.05, 'triangle', 900))
       if (h % 3 === 0) {
-        const penta = [0, 2, 4, 7, 9, 12, 14, 16]
+        const penta = p.minor ? [0, 3, 5, 7, 10, 12, 15, 17] : [0, 2, 4, 7, 9, 12, 14, 16]
         this.pluck(root + 24 + penta[h % penta.length], t + (h % 2) * spb * 0.5, 2.6, 0.07, 'sine')
       }
     } else if (p.tempo === 'mid') {
       // music box arpeggio + tape hiss, a little crooked like an old cassette
-      const prog = [[0, 4, 7], [-3, 0, 4], [-7, -3, 0], [-5, -1, 2]]
+      const prog = p.minor ? [[0, 3, 7], [-4, 0, 3], [-7, -4, 0], [-5, -2, 2]] : [[0, 4, 7], [-3, 0, 4], [-7, -3, 0], [-5, -1, 2]]
       const chord = prog[Math.floor(b / 8) % 4]
       if (b % 8 === 0) chord.forEach((n) => this.pad(root + 12 + n, t, spb * 8.2, 0.03, 'sine', 1400))
       const pattern = [0, 1, 2, 1, 2, 0, 2, 1]

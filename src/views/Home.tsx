@@ -11,6 +11,18 @@ import { dayIndex, dayPhotos } from '../lib/journal'
 import { ConfirmButton, PastLabel, StampSet } from '../components/common'
 import { randomMemoryHref } from '../components/Palette'
 import { toast } from '../lib/toast'
+import DayFilm, { useAtmosphere } from '../components/DayFilm'
+import { TECHNIQUES } from '../lib/atmosphere'
+
+type View = 'pages' | 'line'
+const VIEW_KEY = 'afterimage.memoriesView'
+function savedView(): View {
+  try {
+    return localStorage.getItem(VIEW_KEY) === 'line' ? 'line' : 'pages'
+  } catch {
+    return 'pages'
+  }
+}
 
 export function useNow(every = 20000) {
   const [now, setNow] = useState(() => Date.now())
@@ -38,6 +50,15 @@ export default function Memories() {
   const [q, setQ] = useState('')
   const [show, setShow] = useState<Show>('all')
   const [newest, setNewest] = useState(false)
+  const [view, setView] = useState<View>(savedView)
+  const pick = (v: View) => {
+    setView(v)
+    try {
+      localStorage.setItem(VIEW_KEY, v)
+    } catch {
+      /* private mode: the choice lasts for this visit */
+    }
+  }
   const counts = useMemo(() => {
     const c: Record<Show, number> = { all: memories.length, negative: 0, developed: 0, fading: 0 }
     for (const m of memories) c[showOf(m)]++
@@ -74,10 +95,20 @@ export default function Memories() {
 
       <section className="section first" aria-labelledby="line-h">
         <div className="section-head">
-          <h2 id="line-h">The drying line</h2>
+          <h2 id="line-h">{view === 'pages' ? 'The diary, page by page' : 'The drying line'}</h2>
           <p className="section-meta">
             {memories.length} {memories.length === 1 ? 'day' : 'days'} · {developed} developed
           </p>
+          {memories.length > 0 && (
+            <div className="view-switch" role="group" aria-label="Show the days as">
+              <button type="button" aria-pressed={view === 'pages'} onClick={() => pick('pages')}>
+                Pages
+              </button>
+              <button type="button" aria-pressed={view === 'line'} onClick={() => pick('line')}>
+                Line
+              </button>
+            </div>
+          )}
         </div>
         {memories.length > 2 && (
           <div className="mem-tools">
@@ -105,6 +136,8 @@ export default function Memories() {
           <p className="mem-none">
             No day matches. <button type="button" className="link" onClick={() => (setQ(''), setShow('all'))}>Clear the search</button>
           </p>
+        ) : view === 'pages' && shown.length > 0 ? (
+          <DayFeed memories={shown} />
         ) : (
           <DryingLine memories={shown} grouped={!newest} />
         )}
@@ -150,6 +183,32 @@ const SHOWS: [Show, string][] = [
 function showOf(m: Memory): Exclude<Show, 'all'> {
   if (!m.progress.developedAt) return 'negative'
   return fadeOf(m) > 0.15 ? 'fading' : 'developed'
+}
+
+/** Every day as its page: the same frame, dressed by each day's own rules, so the diary reads as one person's. */
+function DayFeed({ memories }: { memories: Memory[] }) {
+  return (
+    <ul className="day-feed">
+      {memories.map((m) => (
+        <FeedPage key={m.id} m={m} />
+      ))}
+    </ul>
+  )
+}
+
+function FeedPage({ m }: { m: Memory }) {
+  const atm = useAtmosphere(m)
+  return (
+    <li>
+      <a href={`#/print/${m.id}`} aria-label={`${m.title}, ${longDate(m.date)}. ${TECHNIQUES[atm.technique].name}.`}>
+        <DayFilm m={m} still atm={atm} fade={fadeOf(m)} />
+      </a>
+      <p className="day-feed-meta">
+        <span>{TECHNIQUES[atm.technique].name}</span>
+        <span>{m.progress.developedAt ? 'Print' : 'Negative'}</span>
+      </p>
+    </li>
+  )
 }
 
 function DryingLine({ memories, grouped = true }: { memories: Memory[]; grouped?: boolean }) {
@@ -268,16 +327,17 @@ export function Colophon() {
   return (
     <footer className="colophon">
       <p>
-        <strong>Afterimage</strong> keeps everything on this device, in your browser’s storage. Nothing is uploaded.
-        The reader that suggests moments and words works offline and only ever quotes what you wrote; anything written by
-        the app is marked <span className="app-mark">◇</span>.
+        <strong>Afterimage</strong> keeps everything on this device, in your browser’s storage. Nothing is uploaded unless
+        you turn on one of the two AI extras. The reader that suggests moments and words works offline and only ever quotes
+        what you wrote; anything written by the app is marked <span className="app-mark">◇</span>.
       </p>
       <p>
-        The three demo days — the autumn afternoon, the ambition, the night everything was due — belong to a fictional
-        person. Their photographs are illustrations made for this project; their songs and artists are invented.
+        The demo days (an afternoon in the park, a night of big plans at seventeen, a night before a deadline, a concert,
+        a goodbye) belong to a fictional person. Their photographs were generated for this project; their songs and
+        artists are invented.
       </p>
       <p className="colophon-actions">
-        <ConfirmButton confirm="Put the three demo days back as they were?" onConfirm={() => restoreDemos().then(() => toast('The demo days are back.'))}>
+        <ConfirmButton confirm="Put the demo days back as they were?" onConfirm={() => restoreDemos().then(() => toast('The demo days are back.'))}>
           Restore demo days
         </ConfirmButton>
         <ConfirmButton

@@ -3,7 +3,8 @@
 Single source of truth for Afterimage's generated images.
 
 Writes:
-  src/demo/assets.json   — what the app reads (where each file goes, dates, captions)
+  src/demo/roll.json     — what the app reads: the demo camera roll (file, date, time, caption),
+                           only for photographs that actually exist in public/demo/roll
   PHOTO_PROMPTS.md       — 100 self-contained prompts for Nano Banana, one per file
 
 Run:  python3 scripts/assets.py
@@ -222,13 +223,20 @@ for key, file, aspect, where, subject in UI:
 assert len(assets) == 100, len(assets)
 
 # ---------------------------------------------------------------- write outputs
-(ROOT / "src/demo/assets.json").write_text(json.dumps(assets, ensure_ascii=False, indent=1))
+# The app only needs the roll, and only the photographs that exist: a caption without its picture
+# would otherwise fall back to a drawing in the middle of a roll of real photographs.
+roll = [
+    {k: a[k] for k in ("file", "date", "time", "scene", "caption")}
+    for a in assets
+    if a["group"] == "roll" and (ROOT / "public" / a["file"]).exists()
+]
+(ROOT / "src/demo/roll.json").write_text(json.dumps(roll, ensure_ascii=False, indent=1) + "\n")
 
 GROUPS = [
     ("memory", "A · Demo memories (11)", "The three demo days in the darkroom. The first photo of each is the negative you develop; the rest appear in the print’s contact strip. **Landscape 3:2.**"),
     ("roll", "B · The demo camera roll (60)", "Fills the Journal calendar for September–November 2025 and March 2019, the notebook pages, the Test Strip and the Music box (each photo’s colours become notes). **Portrait 4:5.**"),
     ("texture", "C · Materials (6)", "Real paper, wood, velvet and linen under the interface. **Square 1:1, 2048 px if possible.**"),
-    ("scrap", "D · Scrapbook pieces (17)", "Stickers and washi tape for the notebook pages. Generated on **pure white**: the site blends them with *multiply*, so the white disappears into the paper. **Square 1:1.**"),
+    ("scrap", "D · Scrapbook pieces (17)", "Stickers and washi tape for the notebook pages. Generated on **pure white** as PNG, then cut out to transparent WebP with `python3 scripts/cutout_scrap.py`. **Square 1:1.**"),
     ("ui", "E · Interface pictures (6)", "Link preview, tour, empty states, the import screen."),
 ]
 md = [
@@ -242,7 +250,9 @@ md = [
     "- Set the aspect ratio in Nano Banana to the one written next to each prompt.",
     "- Keep the batch consistent: generate a group in one session, and reuse the same film-look sentence (it’s already in every prompt).",
     "- If a face sneaks in, add “seen from behind” or regenerate — the demo person and their friends are never shown.",
-    "- Save photos as JPEG (quality ~85). Save stickers and tape as PNG.",
+    "- Save every picture under exactly the file name shown. The app matches pictures to captions by name, so a batch saved",
+    "  one position off puts every caption on the wrong photograph.",
+    "- Save photos as JPEG (quality ~85). Save stickers and tape as PNG, then run `python3 scripts/cutout_scrap.py`.",
     "- Size: about 1600 px on the long side for photos is plenty; the app resizes everything on the device anyway.",
     "",
 ]
@@ -253,4 +263,4 @@ for g, title, note in GROUPS:
         n += 1
         md += [f"### {n}. `public/{a['file']}` · {a['aspect']}", f"*{a['where']}*", "", "```text", a["prompt"], "```", ""]
 (ROOT / "PHOTO_PROMPTS.md").write_text("\n".join(md))
-print("wrote", len(assets), "assets")
+print("wrote", len(assets), "prompts and", len(roll), "roll photos")

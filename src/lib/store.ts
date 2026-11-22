@@ -2,6 +2,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react'
 import { db } from './db'
 import type { Exposure, Letter, Memory, Page, ShoeboxItem, StripResult } from './types'
 import { buildDemo } from '../demo/seed'
+import { toast } from './toast'
 
 interface State {
   ready: boolean
@@ -22,7 +23,37 @@ const listeners = new Set<() => void>()
 function set(next: Partial<State>) {
   state = { ...state, ...next }
   listeners.forEach((l) => l())
+  if (next.letters) scheduleArrival()
 }
+
+/**
+ * Sealed letters arrive by time passing, not by any write. Wake up when the next one opens, so the
+ * badge, Today and Letters update while the app is open (and say so), instead of on the next reload.
+ */
+let arrivalTimer = 0
+function scheduleArrival() {
+  if (typeof window === 'undefined') return
+  window.clearTimeout(arrivalTimer)
+  const now = Date.now()
+  const due = state.letters.map((l) => (l.sealedUntil ? new Date(l.sealedUntil).getTime() : NaN)).filter((t) => t > now)
+  if (!due.length) return
+  const next = Math.min(...due)
+  // setTimeout fires at once beyond ~24.8 days, so long seals are re-checked in steps
+  arrivalTimer = window.setTimeout(() => {
+    const arrived = state.letters.filter((l) => l.sealedUntil && new Date(l.sealedUntil).getTime() <= Date.now() && new Date(l.sealedUntil).getTime() > now)
+    if (arrived.length)
+      toast(arrived.length === 1 ? 'A letter you sealed has arrived.' : `${arrived.length} letters you sealed have arrived.`, {
+        label: 'Open',
+        run: () => (window.location.hash = arrived.length === 1 ? `/arrival/${arrived[0].id}` : '/letters'),
+      }, 8000)
+    set({ letters: [...state.letters] })
+  }, Math.min(next - now + 250, 2 ** 31 - 1))
+}
+if (typeof document !== 'undefined')
+  document.addEventListener('visibilitychange', () => {
+    // a sleeping tab gets its timers late: look again when it comes back
+    if (!document.hidden && state.ready) set({ letters: [...state.letters] })
+  })
 
 export function uid(prefix = '') {
   return prefix + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4)
@@ -93,18 +124,17 @@ export async function restoreDemos() {
 }
 
 export async function eraseEverything() {
-  await Promise.all([db.clear('memories'), db.clear('letters'), db.clear('blobs'), db.clear('shoebox'), db.clear('pages')])
+  // every store, the whole `meta` store included: hand-punched tunes, double exposures, The Stranger's
+  // profile, queue, rounds, settings and request log all go. (Gemini keys live in localStorage, are not
+  // memories, and stay until they are removed in Settings.)
+  await Promise.all((['memories', 'letters', 'blobs', 'shoebox', 'pages', 'meta'] as const).map((s) => db.clear(s)))
+  // the demo person doesn't come back on the next start either
   await db.put('meta', 'seeded', true)
   await db.put('meta', 'seededRoll', true)
-  await db.put('meta', 'exposures', [])
-  await db.put('meta', 'strips', {})
-  // The Stranger keeps snapshots of passages in its round history — they go too (API keys are not memories and stay)
-  for (const k of ['stranger:profile', 'stranger:queue', 'stranger:history', 'stranger:rounds']) await db.del('meta', k)
   window.dispatchEvent(new Event('afterimage:erased'))
-  set({ exposures: [], strips: {}, shoebox: [], pages: {}, tunes: {} })
   urlCache.forEach((u) => URL.revokeObjectURL(u))
   urlCache.clear()
-  set({ memories: [], letters: [] })
+  set({ memories: [], letters: [], exposures: [], strips: {}, shoebox: [], pages: {}, tunes: {} })
 }
 
 export async function saveMemory(m: Memory) {
@@ -226,6 +256,16 @@ export function letterStatus(l: Letter, now = Date.now()): LetterStatus {
   if (l.openedAt) return 'open'
   if (l.sealedUntil) return 'arrived'
   return 'unread'
+}
+
+/**
+ * A letter left inside a day (no date on the seal) opens when that day is developed: it is read in the
+ * darkroom's last bath, and nowhere before that.
+ */
+export function waitsForDevelop(l: Letter, memories: Memory[]) {
+  if (l.sealedUntil || l.openedAt || l.to !== 'future' || !l.memoryId) return false
+  const m = memories.find((x) => x.id === l.memoryId)
+  return !!m && !m.progress.developedAt
 }
 
 export function threadFor(memoryId: string, letters: Letter[]) {

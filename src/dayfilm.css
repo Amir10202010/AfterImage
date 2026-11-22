@@ -1,0 +1,737 @@
+/* The page of a day (src/components/DayFilm.tsx).
+   Constant: the 4:5 page, its margins, the head and foot, the two typefaces, prints with a paper border.
+   Variable (set by src/lib/atmosphere.ts): palette, photo grade, texture, composition, rhythm, motion. */
+
+.df {
+  margin: 0;
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.df-page {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  container-type: inline-size;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--df-paper);
+  color: var(--df-ink);
+  border-radius: 3px;
+  box-shadow:
+    0 1px 2px rgb(30 20 12 / 0.1),
+    0 18px 44px -18px rgb(40 26 14 / 0.42);
+}
+
+/* ---- texture (variable) ---- */
+.df-texture {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-size: 420px auto;
+  mix-blend-mode: multiply;
+}
+.tex-linen .df-texture {
+  background-image: url('/demo/textures/linen.jpg');
+  opacity: 0.22;
+}
+.tex-kraft .df-texture {
+  background-image: url('/demo/textures/kraft.jpg');
+  opacity: 0.2;
+}
+.tex-washi .df-texture {
+  background-image: url('/demo/textures/paper-ivory.jpg');
+  opacity: 0.45;
+}
+.tex-grain .df-texture {
+  background-image: radial-gradient(ellipse 80% 70% at 50% 45%, transparent 55%, rgb(120 84 40 / 0.35)), var(--grain);
+  background-size:
+    100% 100%,
+    180px;
+  opacity: 0.5;
+}
+/* the geometric page sits on a precise grid instead of a texture */
+.tex-smooth .df-texture {
+  mix-blend-mode: normal;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--df-ink) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--df-ink) 7%, transparent) 1px, transparent 1px);
+  background-size: 8.333cqw 8.333cqw;
+}
+
+/* ---- the constant frame ---- */
+.df-head {
+  position: absolute;
+  z-index: 6;
+  left: 7cqw;
+  right: 7cqw;
+  top: 5.2cqw;
+  display: flex;
+  justify-content: space-between;
+  gap: 2cqw;
+  font: 500 2.5cqw/1 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--df-ink) 78%, transparent);
+}
+
+.df-stage {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  top: 11.5cqw;
+  height: 79cqw;
+}
+
+.df-foot {
+  position: absolute;
+  z-index: 6;
+  left: 7cqw;
+  right: 7cqw;
+  bottom: 5.4cqw;
+  padding-top: 2.6cqw;
+  border-top: max(1px, 0.18cqw) solid color-mix(in srgb, var(--df-ink) 28%, transparent);
+}
+.df-name {
+  margin: 0;
+  font: 500 6.2cqw/1.02 var(--serif);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.df-caption {
+  text-wrap: pretty;
+  margin: 1.5cqw 0 0;
+  max-width: 88%;
+  min-height: 2.6em;
+  font: italic 400 3.45cqw/1.3 var(--serif);
+  color: color-mix(in srgb, var(--df-ink) 82%, transparent);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.df-song {
+  margin: 1.4cqw 0 0;
+  font: 500 2.2cqw/1.2 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--df-ink) 62%, transparent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* photographs are always mounted the same way: a print with a paper border */
+.df-print {
+  position: absolute;
+  padding: 1.5cqw;
+  background: #fbf8f1;
+  box-shadow:
+    0 0.25cqw 0.5cqw rgb(0 0 0 / 0.12),
+    0 1.4cqw 3cqw -1cqw rgb(0 0 0 / 0.28);
+}
+.df-shot {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--df-ink) 85%, #000);
+}
+.df-shot img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: var(--df-grade) saturate(calc(1 - var(--df-age) * 0.8)) sepia(calc(var(--df-age) * 0.5));
+  opacity: 0;
+  transition: opacity var(--df-fade) ease;
+}
+.df-shot img.is-on {
+  opacity: 1;
+}
+
+/* ---- Impressionist light ---- */
+.is-monet .df-p0 {
+  left: 8cqw;
+  right: 8cqw;
+  top: 3cqw;
+  bottom: 4cqw;
+}
+.is-monet .df-shot {
+  background: #fbf8f1;
+}
+.is-monet .df-shot img {
+  -webkit-mask-image: radial-gradient(ellipse 74% 72% at 50% 50%, #000 52%, transparent 100%);
+  mask-image: radial-gradient(ellipse 74% 72% at 50% 50%, #000 52%, transparent 100%);
+}
+.is-monet.is-playing .df-shot img.is-on {
+  animation: df-drift calc(var(--df-hold) + var(--df-fade)) ease-out both;
+}
+.df-dapple {
+  position: absolute;
+  inset: -6cqw;
+  z-index: 3;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+  background:
+    radial-gradient(circle at 22% 28%, color-mix(in srgb, var(--df-wash) 90%, #fff) 0 6%, transparent 15%),
+    radial-gradient(circle at 70% 18%, var(--df-wash) 0 4%, transparent 12%),
+    radial-gradient(circle at 62% 64%, color-mix(in srgb, var(--df-wash) 80%, #fff) 0 7%, transparent 18%),
+    radial-gradient(circle at 30% 78%, var(--df-accent) 0 3%, transparent 11%),
+    radial-gradient(circle at 86% 82%, var(--df-wash) 0 5%, transparent 14%);
+  opacity: 0.9;
+}
+.is-monet.is-playing .df-dapple {
+  animation: df-dapple calc(var(--df-beat) * 16) ease-in-out infinite alternate;
+}
+
+/* ---- Geometric composition ---- */
+.is-kandinsky .df-p0 {
+  left: 7cqw;
+  top: 6cqw;
+  width: 58cqw;
+  height: 66cqw;
+}
+.df-geo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  pointer-events: none;
+  overflow: visible;
+}
+.df-geo-grid {
+  stroke: var(--df-ink);
+  stroke-width: 0.18;
+  opacity: 0.55;
+}
+.df-geo-sun {
+  fill: var(--df-accent);
+  mix-blend-mode: multiply;
+  opacity: 0.88;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.df-geo-dot {
+  fill: var(--df-ink);
+}
+.df-geo-tri {
+  fill: var(--df-wash);
+  mix-blend-mode: multiply;
+}
+.df-geo-cut {
+  stroke: var(--df-second);
+  stroke-width: 0.9;
+}
+.df-geo-arc {
+  fill: none;
+  stroke: var(--df-ink);
+  stroke-width: 0.5;
+}
+.is-kandinsky.is-playing .df-geo-sun {
+  animation: df-pulse var(--df-beat) steps(1, end) infinite;
+}
+.is-kandinsky.is-playing .df-geo-cut {
+  animation: df-flash calc(var(--df-beat) * 2) steps(1, end) infinite;
+}
+
+/* ---- Faded film print ---- */
+.is-film .df-p0 {
+  left: 10cqw;
+  right: 10cqw;
+  top: 3cqw;
+  bottom: 5cqw;
+  rotate: -1.2deg;
+}
+.df-leak {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(ellipse 60% 80% at 104% 18%, rgb(255 120 40 / 0.75), transparent 60%),
+    radial-gradient(ellipse 40% 50% at -6% 96%, rgb(255 200 120 / 0.35), transparent 70%);
+}
+.df-shot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.is-film .df-shot::after {
+  background-image: var(--grain);
+  background-size: 120px;
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+}
+.df-stamp {
+  position: absolute;
+  z-index: 3;
+  right: 3cqw;
+  bottom: 2.6cqw;
+  font: 500 3.2cqw/1 var(--mono);
+  letter-spacing: 0.12em;
+  color: #ff9a3c;
+  text-shadow:
+    0 0 0.6cqw rgb(255 120 30 / 0.9),
+    0 0 1.6cqw rgb(255 90 20 / 0.5);
+}
+.is-film.is-playing .df-leak {
+  animation: df-leak calc(var(--df-hold) * 2) ease-in-out infinite alternate;
+}
+.is-film.is-playing .df-p0 {
+  animation: df-weave 0.5s steps(6) infinite;
+}
+
+/* ---- Cut-paper collage ---- */
+.is-collage .df-p0 {
+  left: 6cqw;
+  top: 3cqw;
+  width: 52cqw;
+  height: 50cqw;
+  rotate: -4deg;
+  z-index: 4;
+}
+.is-collage .df-p1 {
+  left: 46cqw;
+  top: 10cqw;
+  width: 46cqw;
+  height: 44cqw;
+  rotate: 5deg;
+  z-index: 3;
+}
+.is-collage .df-p2 {
+  left: 22cqw;
+  top: 46cqw;
+  width: 40cqw;
+  height: 31cqw;
+  rotate: 2.5deg;
+  z-index: 5;
+}
+.df-cut {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+.df-cut-a {
+  fill: var(--df-second);
+}
+.df-cut-b {
+  fill: var(--df-accent);
+}
+.df-cut-c {
+  fill: var(--df-wash);
+}
+.df-tape {
+  position: absolute;
+  z-index: 2;
+  top: -2.4cqw;
+  left: 50%;
+  width: 16cqw;
+  height: 5cqw;
+  translate: -50% 0;
+  rotate: -6deg;
+  background: center / cover no-repeat;
+  opacity: 0.92;
+}
+.df-tape-0 {
+  background-image: url('/demo/scrap/tape-red.webp');
+}
+.df-tape-1 {
+  background-image: url('/demo/scrap/tape-grid.webp');
+  rotate: 8deg;
+}
+.df-tape-2 {
+  background-image: url('/demo/scrap/tape-kraft.webp');
+}
+.is-collage.is-playing .df-print {
+  animation: df-land 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* ---- Ma, negative space ---- */
+.is-ma .df-p0 {
+  left: 50cqw;
+  top: 6cqw;
+  width: 36cqw;
+  height: 44cqw;
+}
+.df-rule {
+  position: absolute;
+  left: 14cqw;
+  top: 6cqw;
+  height: 66cqw;
+  width: max(1px, 0.18cqw);
+  background: color-mix(in srgb, var(--df-ink) 40%, transparent);
+}
+.df-seal {
+  position: absolute;
+  left: 74cqw;
+  top: 62cqw;
+  width: 9cqw;
+  height: 9cqw;
+  display: grid;
+  place-items: center;
+  font: 600 4.2cqw/1 var(--serif);
+  color: #fbf3ea;
+  background: var(--df-accent);
+  border-radius: 0.6cqw;
+  rotate: 3deg;
+  box-shadow: inset 0 0 0 0.5cqw color-mix(in srgb, var(--df-accent) 60%, #fff);
+}
+.is-ma.is-playing .df-seal {
+  animation: df-breathe calc(var(--df-beat) * 12) ease-in-out infinite alternate;
+}
+
+/* ---- motion ---- */
+@keyframes df-drift {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.06) translate(-1%, -0.6%);
+  }
+}
+@keyframes df-dapple {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(3cqw, -2cqw);
+  }
+}
+@keyframes df-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.07);
+  }
+}
+@keyframes df-flash {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+@keyframes df-leak {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes df-weave {
+  0% {
+    translate: 0 0;
+  }
+  33% {
+    translate: 0.08cqw -0.06cqw;
+  }
+  66% {
+    translate: -0.06cqw 0.05cqw;
+  }
+}
+@keyframes df-land {
+  from {
+    opacity: 0;
+    transform: scale(1.12) rotate(3deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes df-breathe {
+  from {
+    opacity: 0.75;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---- controls (outside the page) ---- */
+.df-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+}
+.df-play {
+  gap: 10px;
+}
+.df-play-icon {
+  font-size: 0.8em;
+  width: 1em;
+  text-align: center;
+}
+.df-voice {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.df-voice input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--burgundy);
+}
+.df-hint {
+  flex-basis: 100%;
+  font-size: 0.82rem;
+  color: var(--ink-2, #5d554c);
+}
+
+/* ---- the explanation ---- */
+.df-rules {
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid var(--rule);
+}
+.df-rules-h {
+  margin: 0 0 10px;
+  font: 600 0.74rem/1.2 var(--sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2, #5d554c);
+}
+.df-rules-tech {
+  margin: 0;
+  font: 500 1.35rem/1.25 var(--serif);
+}
+.df-rules-tech span {
+  font-style: italic;
+  color: var(--ink-2, #5d554c);
+}
+.df-rules-lead {
+  margin: 6px 0 16px;
+  line-height: 1.55;
+}
+.df-axes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 22px;
+  margin: 0 0 16px;
+}
+.df-axis dt {
+  font: 600 0.72rem/1 var(--sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.df-axis dd {
+  margin: 0;
+}
+.df-meter {
+  display: block;
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+}
+.df-meter i {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--v) * 100%);
+  width: 12px;
+  height: 12px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: var(--burgundy);
+  box-shadow: 0 0 0 3px var(--paper);
+}
+.df-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  font-size: 0.76rem;
+  color: var(--ink-2, #5d554c);
+}
+.df-reasons {
+  margin: 0;
+  padding-left: 1.1em;
+  display: grid;
+  gap: 8px;
+  line-height: 1.5;
+}
+.df-rules-note {
+  margin: 16px 0 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--ink-2, #5d554c);
+}
+
+/* ---- the archive: the diary page by page ---- */
+.day-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 248px), 1fr));
+  gap: 28px 22px;
+}
+.day-feed a {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: translate 0.25s var(--ease);
+}
+.day-feed a:hover {
+  translate: 0 -3px;
+}
+.day-feed a:focus-visible {
+  outline: 2px solid var(--burgundy);
+  outline-offset: 6px;
+}
+.day-feed-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: var(--ink-2, #5d554c);
+}
+.view-switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+.view-switch button {
+  border: 0;
+  background: transparent;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font: 500 0.86rem/1 var(--sans);
+  color: var(--ink);
+  cursor: pointer;
+}
+.view-switch button[aria-pressed='true'] {
+  background: var(--paper);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .df *,
+  .df *::after {
+    animation: none !important;
+  }
+  .df-shot img {
+    transition-duration: 0.2s;
+  }
+}
+
+/* ---- the folder of the day (the Print page) ---- */
+@media (min-width: 861px) {
+  .print-hero {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  }
+}
+.print-day {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  /* the whole page and its play button fit on a laptop screen */
+  width: min(100%, 600px, max(320px, calc((100svh - 250px) * 0.8)));
+}
+.print-negative {
+  margin: 0;
+  font: italic 17px/1.4 var(--serif);
+  color: var(--ink-2);
+}
+.print-folder {
+  margin: 0 0 6px;
+  font: 600 0.72rem/1.3 var(--sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.record-facts {
+  font: 500 12px/1.4 var(--mono);
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+  margin-bottom: 6px;
+}
+.section-head .view-switch {
+  margin-left: auto;
+  align-self: center;
+}
+
+/* ---- the new-day form: the song's facts and the page preview ---- */
+.fields-3 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 0.7fr) minmax(0, 0.8fr);
+  gap: 18px;
+}
+@media (max-width: 640px) {
+  .fields-3 {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .fields-3 > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+.heard {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.86rem;
+  color: var(--ink-2);
+}
+.heard:empty {
+  display: none;
+}
+.page-why {
+  margin: 0;
+  padding-left: 1.1em;
+  display: grid;
+  gap: 6px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.day-feed {
+  margin-top: 18px;
+}
+
+/* the night print is dark paper: its warning and "still trying" reds need to be light to be read */
+.print.theme-night .danger,
+.print.theme-night .stamp-trying:not(.is-on) {
+  color: #e0907f;
+}
+.print.theme-night .stamp-btn.stamp-trying.is-on {
+  background: #e0907f;
+  border-color: #e0907f;
+}
+
+/* the month grid keeps its flat seven-column layout; the rows only exist for screen readers */
+.cal-row {
+  display: contents;
+}
+/* the day number on Today's photo strip sits on a dark scrim, so it reads on light photographs too */
+.teaser-d {
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: rgb(23 17 13 / 0.62);
+  text-shadow: none;
+}
+.print.theme-night .margin-form textarea {
+  color: var(--ink);
+}

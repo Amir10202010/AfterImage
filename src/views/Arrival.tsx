@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { letterStatus, useStore } from '../lib/store'
+import { letterStatus, useStore, waitsForDevelop } from '../lib/store'
 import type { Letter } from '../lib/types'
 import { AppVoice, Back } from '../components/common'
 import { LetterReader, ReadLetter, ReplyComposer, SealedLetter, markOpened } from '../components/Conversation'
@@ -41,6 +41,23 @@ export default function Arrival({ id }: { id: string }) {
         <div className="arrival-body">
           <SealedLetter l={letter} />
           <AppVoice className="dark">Not yet. It opens {until(letter.sealedUntil!)}.</AppVoice>
+        </div>
+      </main>
+    )
+
+  if (m && waitsForDevelop(letter, [m]))
+    return (
+      <main className="darkroom theme-paper arrival">
+        <header className="dr-head">
+          <Back href="#/today" dark>
+            Today
+          </Back>
+        </header>
+        <div className="arrival-body">
+          <AppVoice className="dark">This letter was left inside “{m.title}”. It opens when you develop that day.</AppVoice>
+          <a className="btn btn-light" href={`#/develop/${m.id}`}>
+            Develop the day
+          </a>
         </div>
       </main>
     )

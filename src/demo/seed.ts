@@ -18,7 +18,7 @@ export function buildDemo(now: Date): { memories: Memory[]; letters: Letter[] } 
   const autumn: Memory = {
     ...base,
     id: 'demo-autumn',
-    title: 'The Autumn Afternoon',
+    title: 'Autumn afternoon in Linden Park',
     date: '2025-10-12',
     time: '14:00',
     location: 'Linden Park',
@@ -27,7 +27,7 @@ export function buildDemo(now: Date): { memories: Memory[]; letters: Letter[] } 
     mood: 'Nostalgic',
     art: 'autumn',
     story: `We met at the gate of Linden Park at 2pm because Mira refused to be late for once. Tom brought a thermos but forgot the cups, so we walked to the little kiosk by the pond and bought three oat flat whites. Around 3pm we found the green bench with the brass plaque — "For Agnes, who fed the ducks." Jonas read it out loud in a radio voice and we couldn't stop laughing. The leaves were coming down so fast that Mira started catching them and keeping the ones without holes. At 4:30 the light went orange and nobody wanted to say it was getting cold. I kept the receipt in my coat pocket. I want to remember that nothing happened today and it was perfect. Should we do this every October?`,
-    song: { title: 'Paper Lanterns', artist: 'The Halverson Quartet (fictional)', tempo: 'slow' },
+    song: { title: 'Paper Lanterns', artist: 'The Halverson Quartet (fictional)', tempo: 'slow', bpm: 70, mode: 'major', genre: 'Chamber folk', year: 2023 },
     details: ['Kiosk receipt — 3 × oat flat white, €11.40', 'Mira’s mustard scarf', 'The plaque: “For Agnes, who fed the ducks.”', 'A leaf with no holes, pressed in my notebook'],
     moments: [
       { id: 'a1', time: '14:00', text: 'We met at the gate of Linden Park at 2pm' },
@@ -53,7 +53,7 @@ export function buildDemo(now: Date): { memories: Memory[]; letters: Letter[] } 
   const ambition: Memory = {
     ...base,
     id: 'demo-ambition',
-    title: 'The Ambition',
+    title: 'Spring night of big plans',
     date: '2019-03-03',
     time: '23:40',
     location: 'My bedroom desk',
@@ -62,7 +62,7 @@ export function buildDemo(now: Date): { memories: Memory[]; letters: Letter[] } 
     mood: 'Determined, a bit angry',
     art: 'ambition',
     story: `I couldn't sleep so I'm writing this at my desk with the lamp on. Today in economics Mr. Hale asked what we want to be in ten years and I said "running my own company" and half the class laughed. I'm not angry. Okay, I'm a bit angry. I want to become a millionaire before 25. I know how that sounds. I'm going to learn to code properly this summer instead of just watching tutorials. I promise I'll build something real before I finish university. Mum thinks I should study medicine like my cousin. Maybe she's right? I don't know. Is it stupid to want something this much when you don't even know what it is yet?`,
-    song: { title: 'Overdrive Dreams', artist: 'Kestrel Youth (fictional)', tempo: 'mid' },
+    song: { title: 'Overdrive Dreams', artist: 'Kestrel Youth (fictional)', tempo: 'mid', bpm: 100, mode: 'minor', genre: 'Pop punk', year: 2018 },
     details: [],
     moments: [],
     recall: [
@@ -84,7 +84,7 @@ export function buildDemo(now: Date): { memories: Memory[]; letters: Letter[] } 
   const night: Memory = {
     ...base,
     id: 'demo-night',
-    title: 'The Night Everything Was Due',
+    title: 'Night before the deadline',
     date: '2025-11-20',
     time: '21:30',
     location: 'Studio flat, 4th floor',
@@ -99,7 +99,7 @@ export function buildDemo(now: Date): { memories: Memory[]; letters: Letter[] } 
 02:50 — everything broke when I renamed one folder. I almost gave up. Put on the playlist Mira made us in October and kept going. I'm going to sleep for twelve hours after this.
 03:47 — fixed it. It was a missing slash. A missing slash.
 05:12 — submitted. The sky is going grey-blue and the birds have started. Will anyone ever know how close this was?`,
-    song: { title: 'Low Battery', artist: 'NORTHLINE (fictional)', tempo: 'fast' },
+    song: { title: 'Low Battery', artist: 'NORTHLINE (fictional)', tempo: 'fast', bpm: 128, mode: 'minor', genre: 'Electronic', year: 2025 },
     details: ['Sticky note on the monitor: SHIP IT', 'Three empty cans of cold brew', 'ENOENT: no such file or directory', 'Battery at 4% when it finally went through'],
     moments: [
       { id: 'c1', time: '21:30', text: 'opened the laptop with nine hours until the deadline and a project that was mostly a README.' },
@@ -120,6 +120,68 @@ export function buildDemo(now: Date): { memories: Memory[]; letters: Letter[] } 
     ],
     theme: 'night',
     cover: 'static',
+    baths: ['surface', 'sequence', 'recall', 'meeting'],
+    createdAt: created,
+  }
+
+  const concert: Memory = {
+    ...base,
+    id: 'demo-concert',
+    title: 'Autumn evening at the concert',
+    date: '2025-09-19',
+    time: '20:30',
+    location: 'The Foundry, Old Town',
+    people: ['Tom', 'Jonas'],
+    weather: 'Warm night, 17°',
+    mood: 'Electric',
+    art: 'concert',
+    story: `Took the tram across town at seven with Tom and Jonas, who was already singing. The queue for the concert went round the block and nobody cared. We got close to the stage, close enough to see the drummer break a stick in the second song and keep going without it. The whole room jumped on the chorus. I screamed every word of the last song, lost my voice and found a guitar pick on the floor. Walked home through the old town after midnight, ears ringing, nobody wanted to go to bed. Best show of the year. Can we go to every one of their concerts from now on?`,
+    song: { title: 'Static Summer', artist: 'The Paper Hearts (fictional)', tempo: 'fast', bpm: 132, mode: 'major', genre: 'Indie rock', year: 2024 },
+    details: ['A green guitar pick, slightly chewed', 'The ticket stub: general admission, no seat', 'Jonas’s voice, gone by the encore'],
+    moments: [
+      { id: 'd1', time: '19:00', text: 'Took the tram across town at seven with Tom and Jonas' },
+      { id: 'd2', text: 'The queue for the concert went round the block and nobody cared.' },
+      { id: 'd3', text: 'The whole room jumped on the chorus.' },
+      { id: 'd4', text: 'Walked home through the old town after midnight, ears ringing' },
+    ],
+    recall: [
+      { id: 'dr1', sentence: 'We got close to the stage, close enough to see the drummer break a stick in the second song and keep going without it.', word: 'drummer' },
+      { id: 'dr2', sentence: 'I screamed every word of the last song, lost my voice and found a guitar pick on the floor.', word: 'pick' },
+    ],
+    threads: [{ id: 'dt1', quote: 'Can we go to every one of their concerts from now on?', kind: 'question' }],
+    theme: 'night',
+    cover: 'static',
+    baths: ['surface', 'sequence', 'recall', 'meeting'],
+    createdAt: created,
+  }
+
+  const goodbye: Memory = {
+    ...base,
+    id: 'demo-goodbye',
+    title: 'Autumn evening after a goodbye',
+    date: '2025-11-13',
+    time: '17:05',
+    location: 'The bus stop on Vale Street',
+    people: ['Mira'],
+    weather: 'Sleet, 1°',
+    mood: 'Quiet',
+    art: 'goodbye',
+    story: `Mira’s last day before Lisbon. We didn’t do anything special: soup, the radio, her boxes by the door with LISBOA written on them in marker. At five I walked her to the bus stop and we said goodbye there. The bus was on time, which felt rude. She waved from the back window until the bend. I stood there until the lights changed twice. The flat is very quiet now. I miss her already, and she has only been gone an hour. Will we really call every Sunday, like she said?`,
+    song: { title: 'Empty Platform', artist: 'Hollis Row (fictional)', tempo: 'slow', bpm: 66, mode: 'minor', genre: 'Ambient piano', year: 2021 },
+    details: ['Her spare key, which she forgot to give back', 'A box marked LISBOA in black marker', 'The timetable at the stop: 17:12'],
+    moments: [
+      { id: 'e1', time: '17:00', text: 'At five I walked her to the bus stop and we said goodbye there.' },
+      { id: 'e2', text: 'The bus was on time, which felt rude.' },
+      { id: 'e3', text: 'She waved from the back window until the bend.' },
+      { id: 'e4', text: 'I stood there until the lights changed twice.' },
+    ],
+    recall: [
+      { id: 'er1', sentence: 'We didn’t do anything special: soup, the radio, her boxes by the door with LISBOA written on them in marker.', word: 'radio' },
+      { id: 'er2', sentence: 'She waved from the back window until the bend.', word: 'window' },
+    ],
+    threads: [{ id: 'et1', quote: 'Will we really call every Sunday, like she said?', kind: 'question' }],
+    theme: 'paper',
+    cover: 'dust',
     baths: ['surface', 'sequence', 'recall', 'meeting'],
     createdAt: created,
   }
@@ -192,5 +254,5 @@ Go to sleep.`,
     },
   ]
 
-  return { memories: [autumn, ambition, night], letters }
+  return { memories: [autumn, ambition, night, concert, goodbye], letters }
 }

@@ -1,4 +1,4 @@
-import assets from './assets.json'
+import roll from './roll.json'
 // FICTIONAL DEMO "camera roll": small original SVG scenes for the demo person's October and
 // November 2025, so the journal has something in it before you connect your own photos.
 
@@ -118,9 +118,9 @@ const scenes: Record<string, (r: () => number) => string> = {
     ),
 }
 
-/** The demo person's roll comes from the shared asset map (scripts/assets.py). */
-type RollAsset = { id: string; group: string; file: string; date: string; time: string; scene: keyof typeof scenes; caption: string }
-const ROLL = (assets as unknown as RollAsset[]).filter((a) => a.group === 'roll')
+/** The demo person's roll comes from the shared asset map (scripts/assets.py writes roll.json). */
+type RollAsset = { file: string; date: string; time: string; scene: keyof typeof scenes; caption: string }
+const ROLL = roll as RollAsset[]
 
 export function demoRoll() {
   return ROLL.map((a, i) => ({

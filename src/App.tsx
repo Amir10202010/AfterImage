@@ -21,6 +21,9 @@ import Journal from './views/Journal'
 import Spread from './views/Spread'
 import Connect from './views/Connect'
 import MusicBox from './views/MusicBox'
+import NotFound from './views/NotFound'
+import Legal from './views/Legal'
+import { isISODate, isYearMonth } from './lib/route'
 
 function useHash() {
   const [hash, setHash] = useState(() => window.location.hash.slice(1) || '/')
@@ -50,6 +53,31 @@ function StripRedirect() {
   return null
 }
 
+/** Rooms drawn on the dark of the darkroom; every other room is paper. */
+const DARK_ROOMS = new Set(['', 'welcome', 'develop', 'double', 'arrival', 'music', 'stranger', 'strip'])
+
+const TITLES: Record<string, string> = {
+  welcome: 'Welcome',
+  today: 'Today',
+  memories: 'Memories',
+  journal: 'Journal',
+  page: 'Notebook page',
+  letters: 'Letters',
+  print: 'Print',
+  stranger: 'The Stranger',
+  strip: 'The Stranger',
+  connect: 'Bring in photos',
+  settings: 'Settings',
+  new: 'A new day',
+  edit: 'Retouching',
+  develop: 'Darkroom',
+  double: 'Double exposure',
+  music: 'Music box',
+  arrival: 'A letter arrived',
+  privacy: 'Privacy',
+  terms: 'Terms',
+}
+
 export function go(path: string) {
   window.location.hash = path
 }
@@ -64,6 +92,19 @@ export default function App() {
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [path])
+
+  // the browser's own surfaces (the canvas behind an overscroll, the phone's address bar) match the room
+  useEffect(() => {
+    const dark = DARK_ROOMS.has(name)
+    document.documentElement.dataset.room = dark ? 'dark' : 'paper'
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#17110D' : '#F3EDE2')
+  }, [name])
+
+  // every room has its own tab title, so history, bookmarks and screen readers can tell pages apart
+  useEffect(() => {
+    const room = TITLES[name]
+    document.title = room ? `${room} · Afterimage` : name ? 'Not found · Afterimage' : 'Afterimage, a darkroom for the person you were'
+  }, [name])
 
   // first visit: the promo page; after that, straight into the app
   useEffect(() => {
@@ -89,11 +130,11 @@ export default function App() {
       tab = 'memories'
       break
     case 'journal':
-      view = <Journal key={arg ?? 'now'} ym={arg} />
+      view = arg && !isYearMonth(arg) ? <NotFound /> : <Journal key={arg ?? 'now'} ym={arg} />
       tab = 'journal'
       break
     case 'page':
-      view = <Spread key={arg} date={arg} />
+      view = isISODate(arg) ? <Spread key={arg} date={arg} /> : <NotFound />
       tab = 'journal'
       break
     case 'letters':
@@ -120,6 +161,10 @@ export default function App() {
       view = <Settings />
       break
     case 'new':
+      if (arg === 'from' && !isISODate(arg2)) {
+        view = <NotFound />
+        break
+      }
       view = arg === 'from' ? <Create key={'from' + arg2} fromDate={arg2} /> : <Create key="new" />
       tab = null
       break
@@ -136,6 +181,11 @@ export default function App() {
       tab = null
       break
     case 'music':
+      if (arg && !isYearMonth(arg)) {
+        view = <NotFound />
+        tab = 'journal'
+        break
+      }
       view = <MusicBox key={arg ?? 'now'} ym={arg} />
       tab = null
       break
@@ -143,9 +193,12 @@ export default function App() {
       view = <Arrival key={arg} id={arg} />
       tab = null
       break
+    case 'privacy':
+    case 'terms':
+      view = arg ? <NotFound /> : <Legal kind={name} />
+      break
     default:
-      view = <Today />
-      tab = 'today'
+      view = <NotFound />
   }
   return (
     <>

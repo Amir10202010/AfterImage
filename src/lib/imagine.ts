@@ -51,11 +51,12 @@ export async function drawFromWords(input: DrawInput, signal?: AbortSignal): Pro
 }
 
 const PREF = 'afterimage.drawFromWords'
+/** Off until the writer turns it on: drawing sends the story to Gemini and Pollinations. */
 export function drawPref(): boolean {
   try {
-    return localStorage.getItem(PREF) !== 'off'
+    return localStorage.getItem(PREF) === 'on'
   } catch {
-    return true
+    return false
   }
 }
 export function setDrawPref(on: boolean) {

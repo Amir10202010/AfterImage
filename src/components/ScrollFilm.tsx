@@ -39,7 +39,8 @@ export default function ScrollFilm() {
       el.style.setProperty('--p', p.toFixed(4))
       // in: the dark of the hero lifts; out: the film fades into the paper of the next section
       el.style.setProperty('--in', ease((vh - r.top) / vh - 0.6).toFixed(3))
-      el.style.setProperty('--out', ease((p - 0.93) / 0.07).toFixed(3))
+      // the last few frames dissolve into the paper of the next section, without a blank screen after
+      el.style.setProperty('--out', ease((p - 0.965) / 0.035).toFixed(3))
       if (bar.current) bar.current.style.transform = `scaleX(${p.toFixed(4)})`
 
       LINES.forEach((l, i) => {

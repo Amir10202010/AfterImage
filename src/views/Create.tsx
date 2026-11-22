@@ -11,7 +11,6 @@ import {
   recallable,
   sentences,
   splitAround,
-  suggestTheme,
   suggestTitles,
 } from '../lib/extract'
 import { todayISO, roman } from '../lib/time'
@@ -19,6 +18,9 @@ import { AppVoice, Back, InfoTip, SealPicker, sealToDate, type SealChoice } from
 import Photo from '../components/Photo'
 import { BATH_NAMES } from './Darkroom'
 import { drawFromWords, drawPref, setDrawPref } from '../lib/imagine'
+import { atmosphere, folderName, TECHNIQUES } from '../lib/atmosphere'
+import { listen, tempoOf } from '../lib/audio'
+import { swatches, type Swatch } from '../lib/colors'
 
 const STEPS = ['The day', 'What you kept', 'Around it', 'What we noticed', 'A letter forward']
 const WEATHER = ['Sun', 'Cold sun', 'Clouds', 'Rain', 'Snow', 'Wind', 'Heat', 'Fog']
@@ -86,6 +88,30 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
   const [song, setSong] = useState({ title: editing?.song?.title ?? '', artist: editing?.song?.artist ?? '', url: editing?.song?.url ?? '' })
   const [tempo, setTempo] = useState<Tempo>(editing?.song?.tempo ?? 'slow')
   const [audio, setAudio] = useState<{ id?: string; file?: File } | null>(editing?.song?.audioId ? { id: editing.song.audioId } : null)
+  // what is known about the song: typed in, or measured from the file on this device
+  const [facts, setFacts] = useState({
+    bpm: editing?.song?.bpm ? String(editing.song.bpm) : '',
+    mode: editing?.song?.mode ?? ('' as '' | 'major' | 'minor'),
+    genre: editing?.song?.genre ?? '',
+    year: editing?.song?.year ? String(editing.song.year) : '',
+    energy: editing?.song?.energy,
+    brightness: editing?.song?.brightness,
+  })
+  const [hearing, setHearing] = useState<'idle' | 'listening' | 'heard' | 'failed'>(editing?.song?.energy !== undefined ? 'heard' : 'idle')
+  const chooseAudio = async (file: File) => {
+    setAudio({ file })
+    setHearing('listening')
+    const h = await listen(file)
+    if (!h) return setHearing('failed')
+    setFacts((f) => ({ ...f, bpm: String(h.bpm), energy: h.energy, brightness: h.brightness }))
+    setTempo(tempoOf(h.bpm))
+    setHearing('heard')
+  }
+  const dropAudio = () => {
+    setAudio(null)
+    if (hearing === 'heard') setFacts((f) => ({ ...f, bpm: '', energy: undefined, brightness: undefined }))
+    setHearing('idle')
+  }
   // 3
   const [time, setTime] = useState(editing?.time ?? shotTime)
   const [location, setLocation] = useState(editing?.location ?? '')
@@ -158,8 +184,53 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
   useEffect(() => () => drawAbort.current?.abort(), [])
 
   const ss = useMemo(() => sentences(story), [story])
-  const titles = useMemo(() => suggestTitles(story, location || undefined, date), [story, location, date])
-  const autoTheme = suggestTheme({ story, time, tempo: song.title ? tempo : undefined, mood })
+  // the system names the day's folder first; the older title ideas follow
+  const titles = useMemo(() => {
+    const named = story.trim() ? folderName({ story, date, time: time || undefined, location: location || undefined }) : ''
+    return [...new Set([named, ...suggestTitles(story, location || undefined, date)].filter(Boolean))]
+  }, [story, location, date, time])
+  const songFacts = () => {
+    const bpm = Math.round(Number(facts.bpm))
+    const year = Math.round(Number(facts.year))
+    return {
+      bpm: bpm >= 40 && bpm <= 240 ? bpm : undefined,
+      mode: facts.mode || undefined,
+      genre: facts.genre.trim() || undefined,
+      year: year >= 1900 && year <= new Date().getFullYear() ? year : undefined,
+      energy: facts.energy,
+      brightness: facts.brightness,
+    }
+  }
+  // the page the day will get, worked out live from what has been entered so far
+  const [firstSwatches, setFirstSwatches] = useState<Swatch[] | undefined>()
+  const firstUrl = photos[0]?.url
+  useEffect(() => {
+    let live = true
+    if (!firstUrl) setFirstSwatches(undefined)
+    else swatches(firstUrl).then((x) => live && setFirstSwatches(x.length ? x : undefined))
+    return () => {
+      live = false
+    }
+  }, [firstUrl])
+  const preview = useMemo(
+    () =>
+      atmosphere({
+        story,
+        date,
+        time: time || undefined,
+        weather: weather || undefined,
+        mood: mood || undefined,
+        location: location || undefined,
+        song: song.title.trim() ? { title: song.title, artist: song.artist, tempo, ...songFacts() } : undefined,
+        photoCount: Math.max(1, photos.length),
+        swatches: firstSwatches,
+      }),
+    // songFacts reads facts
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [story, date, time, weather, mood, location, song.title, song.artist, tempo, facts, photos.length, firstSwatches],
+  )
+  // the darkroom's light follows the same rules as the page, so a day looks like itself everywhere
+  const autoTheme: Theme = ({ monet: 'autumn', collage: 'autumn', film: 'paper', ma: 'paper', kandinsky: 'night' } as const)[preview.technique]
   const chosenTheme = theme ?? autoTheme
 
   const runReader = () => {
@@ -214,7 +285,7 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
         story: story.trim(),
         photoIds,
         art: photoIds.length ? undefined : editing?.art,
-        song: song.title.trim() ? { title: song.title.trim(), artist: song.artist.trim() || 'Unknown artist', url: song.url.trim() || undefined, audioId, tempo } : undefined,
+        song: song.title.trim() ? { title: song.title.trim(), artist: song.artist.trim() || 'Unknown artist', url: song.url.trim() || undefined, audioId, tempo, ...songFacts() } : undefined,
         ...base,
         theme: t,
         cover: coverFor(t) as Cover,
@@ -329,8 +400,10 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
                       if (!e.target.checked) drawAbort.current?.abort()
                     }}
                   />
-                  Draw a picture from my story as I write{' '}
-                  <InfoTip>Your words are sent to Gemini (to describe the scene) and Pollinations (to draw it). The picture comes back and is kept only on this device.</InfoTip>
+                  <span>
+                    Draw a picture from my story as I write
+                    <small>Off unless you turn it on. Your story goes to Google Gemini and Pollinations to draw it; the picture is kept only on this device.</small>
+                  </span>
                 </label>
               </div>
             )}
@@ -367,7 +440,7 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
             </div>
 
             <h2 className="step-sub">
-              The song <InfoTip>It sets the darkroom’s chemistry: the tempo rocks the tray and drives the soundscape; the title tints the print.</InfoTip>
+              The song <InfoTip>It sets the page’s rhythm and colour: the tempo decides how long each photograph stays, the key warms or mutes the palette, the genre and year can turn the page into a collage or an old film print.</InfoTip>
             </h2>
             <div className="fields-2">
               <label className="field">
@@ -393,18 +466,54 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
                 ))}
               </div>
             </div>
+            <div className="field">
+              <span>The key</span>
+              <div className="chips">
+                {(
+                  [
+                    ['major', 'Major, bright'],
+                    ['minor', 'Minor, darker'],
+                    ['', 'Not sure'],
+                  ] as const
+                ).map(([k, label]) => (
+                  <button key={label} type="button" className={`chip ${facts.mode === k ? 'is-on' : ''}`} aria-pressed={facts.mode === k} onClick={() => setFacts({ ...facts, mode: k })}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="fields-3">
+              <label className="field">
+                <span>Genre</span>
+                <input value={facts.genre} onChange={(e) => setFacts({ ...facts, genre: e.target.value })} placeholder="indie rock, ambient…" />
+              </label>
+              <label className="field">
+                <span>Year</span>
+                <input inputMode="numeric" value={facts.year} onChange={(e) => setFacts({ ...facts, year: e.target.value.replace(/\D/g, '').slice(0, 4) })} placeholder="2024" />
+              </label>
+              <label className="field">
+                <span>Tempo, bpm</span>
+                <input inputMode="numeric" value={facts.bpm} onChange={(e) => setFacts({ ...facts, bpm: e.target.value.replace(/\D/g, '').slice(0, 3) })} placeholder={hearing === 'listening' ? 'listening…' : 'if you know it'} />
+              </label>
+            </div>
             <label className="field file-field">
-              <span>Or your own recording (optional) — plays in the darkroom</span>
-              <input type="file" accept="audio/*" onChange={(e) => e.target.files?.[0] && setAudio({ file: e.target.files[0] })} />
+              <span>Or your own recording (optional). It stays on this device; Afterimage measures its tempo, energy and brightness here.</span>
+              <input type="file" accept="audio/*" onChange={(e) => e.target.files?.[0] && chooseAudio(e.target.files[0])} />
               {audio && (
                 <span className="file-chosen">
                   {audio.file ? audio.file.name : 'an audio file is attached'}{' '}
-                  <button type="button" className="link danger" onClick={() => setAudio(null)}>
+                  <button type="button" className="link danger" onClick={dropAudio}>
                     remove
                   </button>
                 </span>
               )}
+              <span className="heard" aria-live="polite">
+                {hearing === 'listening' && 'Listening to it…'}
+                {hearing === 'heard' && facts.energy !== undefined && `Heard on this device: ${facts.bpm} bpm, energy ${Math.round(facts.energy * 100)} of 100, brightness ${Math.round((facts.brightness ?? 0) * 100)} of 100.`}
+                {hearing === 'failed' && 'This browser could not read that file, so describe the song above instead.'}
+              </span>
             </label>
+            <p className="step-hint small">Only a link or your own file. Afterimage never stores or shares songs it did not get from you.</p>
           </section>
         )}
 
@@ -466,7 +575,9 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
             )}
 
             <div className="field">
-              <span>Title</span>
+              <span>
+                The folder’s name <InfoTip>Afterimage names every day in three to seven words, from what you wrote. Keep the name or write your own.</InfoTip>
+              </span>
               <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={titles[0] ?? 'A title'} />
               <div className="chips">
                 {titles.map((t) => (
@@ -479,6 +590,14 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
                 ))}
               </div>
             </div>
+
+            <ReviewBlock title="The page" sub={`Every day gets a page in the same frame. This one will be ${TECHNIQUES[preview.technique].name.toLowerCase()}, after ${TECHNIQUES[preview.technique].after}: ${preview.mood}.`}>
+              <ul className="page-why">
+                {preview.reasons.slice(1, 4).map((r) => (
+                  <li key={r}>{r}</li>
+                ))}
+              </ul>
+            </ReviewBlock>
 
             <ReviewBlock title="Moments" sub={`Sequence bath — needs 3 or more. You’ll put them back in order. ${moments.length < 3 ? 'Add more to unlock it.' : ''}`}>
               <ol className="edit-list">
@@ -744,9 +863,14 @@ function Hung({ m, edited }: { m: Memory; edited: boolean }) {
             : `“${m.title}” is a negative now — dark and backwards, the way memories are before you go looking for them. Develop it tonight, or leave it for a while. It gets better when you’ve half forgotten.`}
         </p>
         <div className="row">
-          <a className="btn btn-ink" href={m.progress.developedAt ? `#/print/${m.id}` : `#/develop/${m.id}`}>
-            {m.progress.developedAt ? 'Open the print' : 'Develop it now'}
+          <a className="btn btn-ink" href={`#/print/${m.id}`}>
+            See the day’s page
           </a>
+          {!m.progress.developedAt && (
+            <a className="btn btn-ghost-ink" href={`#/develop/${m.id}`}>
+              Develop it now
+            </a>
+          )}
           <a className="link" href="#/memories">
             Leave it to dry
           </a>
