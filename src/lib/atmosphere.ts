@@ -113,6 +113,8 @@ export interface DayInput {
   weather?: string
   mood?: string
   location?: string
+  /** who was there: company adds a little pace to a page */
+  people?: string[]
   song?: Song
   photoCount: number
   swatches?: Swatch[]
@@ -121,7 +123,7 @@ export interface DayInput {
 }
 
 export function inputFor(m: Memory, swatches?: Swatch[], today?: Date): DayInput {
-  return { story: m.story, date: m.date, time: m.time, weather: m.weather, mood: m.mood, location: m.location, song: m.song, photoCount: Math.max(1, m.photoIds.length), swatches, today }
+  return { story: m.story, date: m.date, time: m.time, weather: m.weather, mood: m.mood, location: m.location, people: m.people, song: m.song, photoCount: Math.max(1, m.photoIds.length), swatches, today }
 }
 
 type Season = 'winter' | 'spring' | 'summer' | 'autumn'
@@ -198,7 +200,8 @@ export function atmosphere(d: DayInput): Atmosphere {
   const ph = photoTone(d.swatches)
 
   // the four axes
-  const energy = clamp(0.5 * musicEnergy + 0.5 * textEnergy + (d.photoCount >= 5 ? 0.04 : 0))
+  const company = d.people?.filter((p) => p.trim()) ?? []
+  const energy = clamp(0.5 * musicEnergy + 0.5 * textEnergy + (d.photoCount >= 5 ? 0.04 : 0) + Math.min(0.12, 0.03 * company.length))
   const weather = d.weather ?? ''
   const weatherTone = /sun|clear|солн|ясн/i.test(weather) ? 0.1 : /rain|snow|sleet|grey|gray|fog|дожд|снег|туман/i.test(weather) ? -0.08 : 0
   const bright = song?.brightness !== undefined ? 0.12 * (song.brightness - 0.5) : 0
@@ -248,6 +251,7 @@ export function atmosphere(d: DayInput): Atmosphere {
   ].filter(Boolean)
   if (said.length) reasons.push(`In the story, ${said.join('; ')}.`)
   if (song?.energy !== undefined) reasons.push(`Measured from the recording on this device: energy ${Math.round(song.energy * 100)} of 100, brightness ${Math.round((song.brightness ?? 0) * 100)} of 100.`)
+  if (company.length) reasons.push(`${company.length === 1 ? `With ${company[0]}` : `With ${company.slice(0, -1).join(', ')} and ${company[company.length - 1]}`}: company adds a little pace to the page.`)
   if (ph.known) reasons.push(`The photographs lean ${ph.warmth > 0.15 ? 'warm (ambers and reds)' : ph.warmth < -0.15 ? 'cool (blues and greys)' : 'neutral'}; the page takes its colours from them.`)
   reasons.push(`${capital(pod ? `${sea} ${pod}` : sea)}${weather ? `, ${weather.toLowerCase()}` : ''}: the light on the page is ${warmth > 0.15 ? 'warm' : warmth < -0.15 ? 'cold' : 'neutral'}.`)
 
