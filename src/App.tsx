@@ -72,7 +72,7 @@ function StripRedirect() {
 }
 
 /** Rooms drawn on the dark of the darkroom; every other room is paper. */
-const DARK_ROOMS = new Set(['', 'welcome', 'develop', 'double', 'arrival', 'music', 'stranger', 'strip'])
+const DARK_ROOMS = new Set(['', 'welcome', 'develop', 'double', 'music', 'stranger', 'strip'])
 
 const TITLES: Record<string, string> = {
   welcome: 'Welcome',
