@@ -23,10 +23,6 @@ import './dayfilm.css'
 import App from './App'
 import { init } from './lib/store'
 import { upgradeDemoAssets } from './demo/upgrade'
-import { forgetBrowserKeys } from './lib/gemini'
-
-// The Stranger runs on the project's keys now: drop any key an older version kept in this browser
-forgetBrowserKeys()
 
 // The demo photographs are fetched once the person is inside the app, or a few seconds into the front page,
 // so they never compete with the front page's first video.

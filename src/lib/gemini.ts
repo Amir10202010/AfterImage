@@ -122,8 +122,8 @@ export function onKeysChange(f: () => void) {
 export type GeminiErrorKind = 'no-keys' | 'invalid-key' | 'rate-limit' | 'network' | 'timeout' | 'malformed' | 'empty' | 'blocked' | 'model' | 'server' | 'unknown'
 
 const MESSAGES: Record<GeminiErrorKind, string> = {
-  'no-keys': 'The Stranger isn’t switched on on this server yet. Try again later.',
-  'invalid-key': 'Gemini refused the key. Try again in a little while.',
+  'no-keys': 'No Gemini API key yet. Add one in Settings → The Stranger.',
+  'invalid-key': 'Gemini refused the API key. Check it in Settings — it may be mistyped, revoked, or missing the Generative Language API.',
   'rate-limit': 'Gemini’s free quota is used up for now. Wait a minute (or until tomorrow for the daily limit) and try again.',
   network: 'Couldn’t reach Gemini. You seem to be offline — the rest of Afterimage still works.',
   timeout: 'Gemini took too long to answer. Try again in a moment.',
@@ -209,37 +209,10 @@ const sdkTransport: Transport = async (c) => {
   return res.text
 }
 
-/**
- * The project's own keys, on the server (/api/stranger): the default. Players never enter a key.
- * The request carries the system text, the prompt and the schema; the server adds a key and rotates.
- */
-const serverTransport: Transport = async (c) => {
-  const r = await fetch('/api/stranger', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ system: c.system, prompt: c.prompt, schema: c.schema, temperature: c.temperature, model: c.model }),
-    signal: c.signal,
-  })
-  const j = (await r.json().catch(() => ({}))) as { text?: string; kind?: GeminiErrorKind }
-  if (!r.ok) throw new GeminiError(j.kind && j.kind in MESSAGES ? j.kind : r.status === 429 ? 'rate-limit' : 'server', r.status)
-  return j.text
-}
-
-// a key in this browser (from an older version of the app) still works; otherwise the server answers
-const defaultTransport: Transport = (c) => (c.key ? sdkTransport(c) : serverTransport(c))
-
-let transport: Transport = defaultTransport
-/** Tests replace how requests are sent. */
+let transport: Transport = sdkTransport
+/** Tests (or a future server proxy) replace how requests are sent. */
 export function setTransport(t: Transport | null) {
-  transport = t ?? defaultTransport
-}
-
-/**
- * Keys a player once pasted into this browser are no longer used or editable (the game runs on the
- * project's keys, on the server), so they are forgotten: a revoked old key can't strand anyone.
- */
-export function forgetBrowserKeys() {
-  if (getKeys().length) setKeys([])
+  transport = t ?? sdkTransport
 }
 
 /* ---------- request log (metadata only, never keys or text) ---------- */
@@ -285,14 +258,13 @@ export interface JsonRequest<T> {
  */
 export async function generateJson<T>(r: JsonRequest<T>): Promise<T> {
   const keys = getKeys()
-  // no key in this browser: the server sends it with the project's keys (and rotates them itself)
-  const viaServer = !keys.length
+  if (!keys.length) throw new GeminiError('no-keys')
   if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new GeminiError('network')
   let modelIdx = 0
   let last: GeminiError = new GeminiError('unknown')
-  const attempts = viaServer ? 2 : Math.min(MAX_ATTEMPTS, Math.max(keys.length, 2))
+  const attempts = Math.min(MAX_ATTEMPTS, Math.max(keys.length, 2))
   for (let a = 0; a < attempts; a++) {
-    const k = viaServer ? { key: '', index: -1 } : nextKey(keys)!
+    const k = nextKey(keys)!
     const model = GEMINI_MODELS[modelIdx] ?? GEMINI_MODELS[0]
     const ctl = new AbortController()
     const stop = () => ctl.abort()

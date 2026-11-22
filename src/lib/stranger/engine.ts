@@ -4,8 +4,7 @@
 import { useSyncExternalStore } from 'react'
 import { db } from '../db'
 import { getState as archiveState } from '../store'
-import { agreed } from '../agreement'
-import { GEMINI_MODELS, GeminiError, generateJson, onRequestLogged, restoreLog, type GeminiErrorKind, type RequestLog } from '../gemini'
+import { GEMINI_MODELS, GeminiError, generateJson, getKeys, onRequestLogged, restoreLog, type GeminiErrorKind, type RequestLog } from '../gemini'
 import { extractFragments, shortfall, type RealFragment } from './fragments'
 import { REAL_PER_ROUND, accuse, assemble, emptyHistory, pickStranger, remember, selectReal, type History, type Round, type StrangerLine } from './game'
 import { PROFILE_VERSION, analysisRequest, batches, checker, lineId, linesRequest, measure, mergeRequest, parseLines, parseStyle, spread, staleness, type StyleDescription, type WritingProfile } from './style'
@@ -137,13 +136,13 @@ export function realCount(includeDemo = state.prefs.includeDemo) {
 
 /* ---------- readiness ---------- */
 
-export type Blocker = 'no-consent' | 'no-profile' | 'short'
+export type Blocker = 'no-keys' | 'no-consent' | 'no-profile' | 'short'
 
 export function blockers(): Blocker[] {
   const b: Blocker[] = []
   if (realCount() < REAL_PER_ROUND) b.push('short')
-  // keys are the project's, on the server; consent is the agreement accepted on entering the app
-  if (!consented()) b.push('no-consent')
+  if (!getKeys().length) b.push('no-keys')
+  if (!state.prefs.consentAt) b.push('no-consent')
   if (!state.profile) b.push('no-profile')
   return b
 }
@@ -153,12 +152,9 @@ function fail(e: unknown) {
   set({ lastError: { kind: ge?.kind ?? 'other', message: ge?.message ?? (e instanceof Error ? e.message : String(e)), at: Date.now() } })
 }
 
-function consented() {
-  return agreed() || !!state.prefs.consentAt
-}
-
 function assertCanSend() {
-  if (!consented()) throw new Error('Sending your writing to Gemini needs your agreement to the terms first.')
+  if (!getKeys().length) throw new GeminiError('no-keys')
+  if (!state.prefs.consentAt) throw new Error('Sending your writing to Gemini needs your consent first.')
 }
 
 /* ---------- the writing profile ---------- */
@@ -311,7 +307,7 @@ export type StartResult = { ok: true; round: Round } | { ok: false; blockers: Bl
 export async function startRound(): Promise<StartResult> {
   const b = blockers()
   // with lines already in the queue, a missing key doesn't stop play
-  const hard = b.filter((x) => x === 'short' || ((x === 'no-consent' || x === 'no-profile') && !unused().length))
+  const hard = b.filter((x) => x === 'short' || ((x === 'no-keys' || x === 'no-consent' || x === 'no-profile') && !unused().length))
   if (hard.length) return { ok: false, blockers: hard }
   if (!unused().length) {
     await replenish(true)
@@ -329,7 +325,7 @@ export async function startRound(): Promise<StartResult> {
   const rounds = [...state.rounds.filter((r) => r.status !== 'playing'), round].slice(-KEEP_ROUNDS)
   set({ queue, history, rounds })
   await Promise.all([save('queue', queue), save('history', history), save('rounds', rounds)])
-  if (unused(queue).length < LOW_WATER && consented() && state.profile) void replenish()
+  if (unused(queue).length < LOW_WATER && getKeys().length && state.prefs.consentAt && state.profile) void replenish()
   return { ok: true, round }
 }
 

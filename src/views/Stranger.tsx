@@ -9,8 +9,7 @@ import type { Memory, ShoeboxItem } from '../lib/types'
 import { longDate } from '../lib/time'
 import Photo from '../components/Photo'
 import { AppVoice } from '../components/common'
-import { LastError, ProfilePanel } from '../components/StrangerAI'
-import { agree, onAgree } from '../lib/agreement'
+import { ConsentPanel, KeysPanel, LastError, ProfilePanel } from '../components/StrangerAI'
 import { hrefFor } from './Home'
 
 const HOLD_MS = 800
@@ -56,7 +55,9 @@ export default function Stranger() {
           <span aria-hidden="true">←</span> Today
         </a>
         <span className="st-bar-k">The Stranger</span>
-        <span className="st-bar-link" aria-hidden="true" />
+        <a className="st-bar-link" href="#/settings?stranger=1">
+          AI settings
+        </a>
       </header>
       {phase.k === 'loading' && <Developing step={phase.step} />}
       {phase.k === 'intro' && !round && <Entry onPlay={play} />}
@@ -72,9 +73,6 @@ export default function Stranger() {
 function Entry({ onPlay }: { onPlay: () => void }) {
   const s = useStranger()
   useStore() // re-render when the archive changes
-  // and when the terms are accepted from here
-  const [, agreedTick] = useState(0)
-  useEffect(() => onAgree(() => agreedTick((n) => n + 1)), [])
   const b = blockers()
   const st = stats(s.rounds)
   const ready = !b.includes('short') && (!b.length || s.queue.some((l) => !l.usedAt))
@@ -122,7 +120,8 @@ function Setup({ blockers: b }: { blockers: Blocker[] }) {
   const withDemo = realCount(true)
   const steps: { id: Blocker; done: boolean; title: string }[] = [
     { id: 'short', done: !b.includes('short'), title: 'Enough of your own writing' },
-    ...(b.includes('no-consent') ? [{ id: 'no-consent' as Blocker, done: false, title: 'The terms' }] : []),
+    { id: 'no-keys', done: !b.includes('no-keys'), title: 'Your Gemini API key' },
+    { id: 'no-consent', done: !b.includes('no-consent'), title: 'Your consent' },
     { id: 'no-profile', done: !b.includes('no-profile'), title: 'Your writing profile' },
   ]
   const next = steps.find((x) => !x.done)?.id
@@ -161,17 +160,14 @@ function Setup({ blockers: b }: { blockers: Blocker[] }) {
           )}
         </div>
       )}
+      {next === 'no-keys' && (
+        <div className="st-panel st-panel-paper">
+          <KeysPanel />
+        </div>
+      )}
       {next === 'no-consent' && (
         <div className="st-panel st-panel-paper">
-          <p className="st-p">
-            The Stranger sends passages you wrote to Google Gemini to imitate your style. Read the <a href="#/terms">terms</a> and the{' '}
-            <a href="#/privacy">privacy notice</a>, then agree to play.
-          </p>
-          <div className="st-acts">
-            <button type="button" className="btn btn-ink btn-sm" onClick={agree}>
-              I agree
-            </button>
-          </div>
+          <ConsentPanel />
         </div>
       )}
       {next === 'no-profile' && (

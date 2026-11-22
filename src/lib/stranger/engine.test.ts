@@ -89,7 +89,7 @@ describe('the Stranger engine', () => {
   it('explains what is missing before anything is sent', async () => {
     const e = await fresh()
     const r = await e.startRound()
-    expect(r).toEqual({ ok: false, blockers: ['no-consent', 'no-profile'] })
+    expect(r).toEqual({ ok: false, blockers: ['no-keys', 'no-consent', 'no-profile'] })
     expect(calls).toHaveLength(0)
   })
 
@@ -106,7 +106,7 @@ describe('the Stranger engine', () => {
     setKeys([KEY])
     expect(await e.buildProfile()).toBe(false)
     expect(calls).toHaveLength(0)
-    expect(e.strangerState().lastError?.message).toMatch(/agreement to the terms/i)
+    expect(e.strangerState().lastError?.message).toMatch(/consent/i)
   })
 
   it('builds the profile once, then plays round after round from the queue', async () => {

@@ -45,9 +45,8 @@ function Privacy() {
           (not your story) is sent to Pollinations, which draws it. The picture is then kept only on your device.
         </li>
         <li>
-          <strong>The Stranger</strong> (the game where you find the one passage you didn’t write) sends a selection of passages you wrote to Google Gemini, so it can imitate your style. Names you tagged are replaced with
-          “[name]”; photos, exact dates, the people and place fields and sealed letters are never sent. The request goes through Afterimage’s own server, which adds the project’s Gemini key and keeps nothing. On Google’s free tier,
-          Google may use what it receives to improve its products. You don’t need a key of your own.
+          <strong>The Stranger’s AI questions</strong> work only if you add your own Google Gemini key. Then the parts of your diary it asks about are sent to Google with your key. The key is kept in this browser and never in a backup
+          file.
         </li>
         <li>
           <strong>Read it aloud</strong> uses your browser’s speech voices. Afterimage picks a voice built into the device when there is one; some browsers only offer online voices, which send the text to the browser maker.
@@ -71,12 +70,6 @@ function Terms() {
       <p className="kicker">Terms</p>
       <h1>A small prototype, offered as it is.</h1>
       <p className="legal-lede">Afterimage was made for the Genesis Hackathon. It is free to try and comes without any warranty: keep a backup of anything you would hate to lose.</p>
-
-      <h2>Agreeing</h2>
-      <p>
-        You are asked to accept these terms and the privacy notice once, when you first enter the app. Accepting covers the two features that send text to AI services: The Stranger, and drawing a picture from your story (which
-        stays off until you turn it on). Everything else works on your device alone.
-      </p>
 
       <h2>Your content</h2>
       <ul>
