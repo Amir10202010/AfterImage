@@ -2,7 +2,7 @@
 
 Every prompt below is self-contained: copy it as is. The **file name** shows where to save the result — the site picks each file up automatically
 and falls back to the drawn version when a file is missing. After adding files, open **Settings → Restore demo days** once so the demo
-journal and the three demo memories switch to your photos.
+journal and the demo memories switch to your photos.
 
 **Tips**
 - Set the aspect ratio in Nano Banana to the one written next to each prompt.
@@ -15,7 +15,7 @@ journal and the three demo memories switch to your photos.
 
 ## A · Demo memories (11)
 
-The three demo days in the darkroom. The first photo of each is the negative you develop; the rest appear in the print’s contact strip. **Landscape 3:2.**
+The first three demo days in the darkroom. The first photo of each is the negative you develop; the rest appear in the print’s contact strip. **Landscape 3:2.** (The concert and goodbye days reuse camera-roll photographs, copied into `public/demo/memories/`.)
 
 ### 1. `public/demo/memories/autumn.jpg` · 3:2
 *The Autumn Afternoon · main photograph*

@@ -30,6 +30,14 @@ describe('atmosphere', () => {
     expect(slow.rhythm.bpm).toBe(60)
   })
 
+  it('reads who was there: company adds pace and is named in the reasons', () => {
+    const m = byId('demo-goodbye')
+    const alone = atmosphere({ ...inputFor(m, undefined, today), people: [] })
+    const crowd = atmosphere({ ...inputFor(m, undefined, today), people: ['Mira', 'Tom', 'Jonas', 'Lena'] })
+    expect(crowd.axes.energy).toBeGreaterThan(alone.axes.energy)
+    expect(crowd.reasons.join(' ')).toContain('Mira, Tom, Jonas and Lena')
+  })
+
   it('turns old days into film, whatever they felt like', () => {
     const m = byId('demo-autumn')
     expect(atmosphere(inputFor(m, undefined, new Date('2033-01-01'))).technique).toBe('film')
