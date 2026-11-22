@@ -2,7 +2,7 @@
 
 **Genesis Hackathon · кейс ARTTech «Make the Invisible Visible»**
 
-Прототип: _вставьте ссылку на деплой_ · Код: этот репозиторий · Видео: _вставьте ссылку_
+Прототип: https://after-image-sepia.vercel.app/ · Код:  · Видео: 
 
 ![Пять дней одного дневника](docs/days/diary.jpg)
 
