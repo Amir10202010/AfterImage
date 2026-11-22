@@ -78,9 +78,13 @@ describe('music changes the result', () => {
 })
 
 describe('the visual system', () => {
-  it('gives the three demo days three different techniques', () => {
+  it('gives the six demo days six different techniques, one of each', () => {
     const ids = demos.map((m) => atmosphere(m).technique.id)
+    expect(demos).toHaveLength(6)
     expect(new Set(ids).size).toBe(ids.length)
+    expect(atmosphere(demos.find((m) => m.id === 'demo-picnic')!).technique.id).toBe('collage')
+    expect(atmosphere(demos.find((m) => m.id === 'demo-frost')!).technique.id).toBe('ma')
+    expect(atmosphere(demos.find((m) => m.id === 'demo-records')!).technique.id).toBe('film')
     expect(atmosphere(demos.find((m) => m.id === 'demo-autumn')!).technique.id).toBe('impression')
     expect(atmosphere(demos.find((m) => m.id === 'demo-night')!).technique.id).toBe('kandinsky')
   })

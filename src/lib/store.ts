@@ -1,7 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { db } from './db'
 import type { Exposure, Letter, Memory, Page, ShoeboxItem, StripResult } from './types'
-import { buildDemo } from '../demo/seed'
+import { MORE_DEMO_IDS, buildDemo } from '../demo/seed'
 
 interface State {
   ready: boolean
@@ -34,6 +34,7 @@ export async function init() {
   try {
     const seeded = await db.get<boolean>('meta', 'seeded')
     if (!seeded) await seedDemos()
+    else if (!(await db.get<boolean>('meta', 'seededMoreDemos'))) await seedMoreDemos()
     if (!(await db.get<boolean>('meta', 'seededRoll'))) await seedDemoRoll()
     const [memories, letters, exposures, strips, shoebox, pages] = await Promise.all([
       db.all<Memory>('memories'),
@@ -64,6 +65,14 @@ async function seedDemos() {
   for (const m of memories) await db.put('memories', m.id, m)
   for (const l of letters) await db.put('letters', l.id, l)
   await db.put('meta', 'seeded', true)
+  await db.put('meta', 'seededMoreDemos', true)
+}
+
+/** Diaries started before the three later demo days existed get them once (never again if deleted). */
+async function seedMoreDemos() {
+  const fresh = buildDemo(new Date()).memories.filter((m) => (MORE_DEMO_IDS as readonly string[]).includes(m.id))
+  for (const m of fresh) if (!(await db.get<Memory>('memories', m.id))) await db.put('memories', m.id, m)
+  await db.put('meta', 'seededMoreDemos', true)
 }
 
 /** The fictional demo person's camera roll, for the journal. */
@@ -177,6 +186,16 @@ export async function putBlob(blob: Blob): Promise<string> {
   const id = uid('b_')
   await db.put('blobs', id, blob)
   return id
+}
+
+/** The photographs of a day as stored on the device, in order (missing blobs are skipped). */
+export async function memoryPhotos(m: Pick<Memory, 'photoIds'>): Promise<Blob[]> {
+  const out: Blob[] = []
+  for (const id of m.photoIds) {
+    const b = await db.get<Blob>('blobs', id)
+    if (b) out.push(b)
+  }
+  return out
 }
 
 const urlCache = new Map<string, string>()

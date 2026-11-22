@@ -12,6 +12,7 @@ import Landing, { hasEntered } from './views/Landing'
 import Shell, { type Tab } from './components/Shell'
 import Darkroom from './views/Darkroom'
 import Print from './views/Print'
+import Feed from './views/Feed'
 import Create from './views/Create'
 import Letters from './views/Letters'
 import Arrival from './views/Arrival'
@@ -102,6 +103,10 @@ export default function App() {
       break
     case 'print':
       view = <Print key={arg} id={arg} />
+      tab = 'memories'
+      break
+    case 'feed':
+      view = <Feed />
       tab = 'memories'
       break
     case 'stranger':
