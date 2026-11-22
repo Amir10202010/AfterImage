@@ -7213,12 +7213,12 @@ a.letter-group-title:hover {
   background: linear-gradient(90deg, #7a2e2e, #d9a65b);
   box-shadow: 0 0 8px rgba(217, 166, 91, 0.6);
 }
-/* at the very end the film fades into the paper of the next section */
-.l-film-paper {
+/* at the end the film sinks back into its own dark, the colour the next section starts with */
+.l-film-dusk {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: var(--ivory);
+  background: #17110d;
   opacity: var(--out);
 }
 @media (max-width: 760px) {

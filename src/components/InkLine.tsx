@@ -116,7 +116,8 @@ export default function InkLine({ zone }: { zone: RefObject<HTMLElement | null> 
         // the stroke starts under the manifesto's words, never through them
         const m = box(manifesto)
         const text = manifesto.querySelector<HTMLElement>('p')
-        const below = text ? box(text).b + 28 : m.t + 10
+        // the manifesto stands on the dark and the paper comes up beneath it: the ink starts once there is paper
+        const below = Math.max(text ? box(text).b + 28 : m.t + 10, m.t + (m.b - m.t) * 0.66)
         pts.push({ x: w * 0.5, y: below }, { x: w * 0.5 + 6, y: below + 40 })
         pts.push({ x: w * (narrow ? 0.9 : 0.78), y: Math.max(below + 90, m.b - 50) })
       }

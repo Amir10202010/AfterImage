@@ -763,3 +763,32 @@
   background: var(--dr-bg);
   box-shadow: none;
 }
+
+/* ---- the landing: from the film's dark to the paper, slowly ----
+   The film ends in its dark; the manifesto stands on that same dark; then, over about one screen of
+   scrolling, the dark warms through sepia into the paper, the way a print comes up in the tray.
+   No colour changes in a single step, and there is never an empty screen of one colour. */
+.landing .l-ink-zone {
+  background: linear-gradient(
+    to bottom,
+    #17110d 0,
+    #17110d 58svh,
+    #1d150f 66svh,
+    #2c2018 76svh,
+    #47362a 88svh,
+    #6f5c4b 101svh,
+    #a08e7a 114svh,
+    #cbbda9 126svh,
+    #e6dccc 138svh,
+    var(--ivory) 150svh
+  );
+}
+.landing .l-ink-zone > .l-manifesto {
+  min-height: 150svh;
+  /* the words arrive as soon as the film has gone dark: no empty screen in between */
+  padding-top: clamp(36px, 7svh, 80px);
+  color: #f3ede2;
+}
+.landing .l-ink-zone > .l-manifesto em {
+  color: #e8c48a;
+}

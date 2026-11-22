@@ -31,16 +31,26 @@ export default function ScrollFilm() {
     v.muted = true
     let raf = 0
     let shown = -1
+    const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)')
     const frame = () => {
       raf = 0
       const vh = window.innerHeight
       const r = el.getBoundingClientRect()
+      // With reduced motion the section is one still screen (see the stylesheet). Mapping the scroll onto it
+      // would race through the whole film in a pixel, so it simply holds its first frame and caption.
+      if (calm?.matches || r.height < vh * 1.5) {
+        el.style.setProperty('--p', '0')
+        el.style.setProperty('--in', '1')
+        el.style.setProperty('--out', '0')
+        return
+      }
       const p = clamp01(-r.top / Math.max(1, r.height - vh))
       el.style.setProperty('--p', p.toFixed(4))
-      // in: the dark of the hero lifts; out: the film fades into the paper of the next section
+      // in: the dark of the hero lifts as the film arrives
       el.style.setProperty('--in', ease((vh - r.top) / vh - 0.6).toFixed(3))
-      // the last few frames dissolve into the paper of the next section, without a blank screen after
-      el.style.setProperty('--out', ease((p - 0.965) / 0.035).toFixed(3))
+      // out: over the last stretch the film sinks back into the dark it came from, so it meets the dark top
+      // of the next section with no seam; the change to paper happens slowly there, never in one step
+      el.style.setProperty('--out', ease((p - 0.86) / 0.12).toFixed(3))
       if (bar.current) bar.current.style.transform = `scaleX(${p.toFixed(4)})`
 
       LINES.forEach((l, i) => {
@@ -71,11 +81,13 @@ export default function ScrollFilm() {
     frame()
     window.addEventListener('scroll', on, { passive: true })
     window.addEventListener('resize', on)
+    calm?.addEventListener?.('change', on)
     v.addEventListener('loadedmetadata', on)
     v.addEventListener('seeked', on)
     return () => {
       window.removeEventListener('scroll', on)
       window.removeEventListener('resize', on)
+      calm?.removeEventListener?.('change', on)
       v.removeEventListener('loadedmetadata', on)
       v.removeEventListener('seeked', on)
       cancelAnimationFrame(raf)
@@ -96,7 +108,7 @@ export default function ScrollFilm() {
         <span className="l-film-bar" aria-hidden="true">
           <span ref={bar} />
         </span>
-        <span className="l-film-paper" aria-hidden="true" />
+        <span className="l-film-dusk" aria-hidden="true" />
       </div>
     </section>
   )
