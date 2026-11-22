@@ -445,3 +445,42 @@ html[data-room='dark'] body {
     inset 0 0 70px rgb(150 110 60 / 0.2),
     0 0 0 3px rgb(122 46 46 / 0.2);
 }
+
+/* a room that is still arriving over the network: just the paper, no spinner */
+.room-wait {
+  min-height: 70vh;
+}
+
+/* ---- skip the navigation (visible only when it has keyboard focus) ---- */
+.skip-link {
+  position: fixed;
+  z-index: 1000;
+  left: 12px;
+  top: 12px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font: 500 14px var(--sans);
+  transform: translateY(-160%);
+  transition: transform 0.15s ease;
+}
+.skip-link:focus-visible {
+  transform: none;
+  outline: 2px solid var(--burgundy);
+  outline-offset: 2px;
+}
+.shell main:focus {
+  outline: none;
+}
+
+/* long words and links in a story never push the page sideways on a phone */
+.story p,
+.margin-notes p,
+.details li,
+.timeline li,
+.ledger-print .quote,
+.letter-p {
+  overflow-wrap: break-word;
+}

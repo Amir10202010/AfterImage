@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { useStore } from './lib/store'
 import Palette from './components/Palette'
@@ -7,23 +7,41 @@ import Toaster from './components/Toaster'
 const hashRef = { current: window.location.hash.slice(1) || '/' }
 import Memories from './views/Home'
 import Today from './views/Today'
-import Settings from './views/Settings'
 import Landing, { hasEntered } from './views/Landing'
 import Shell, { type Tab } from './components/Shell'
 import Darkroom from './views/Darkroom'
 import Print from './views/Print'
 import Create from './views/Create'
 import Letters from './views/Letters'
-import Arrival from './views/Arrival'
-import Double from './views/Double'
-import Stranger from './views/Stranger'
 import Journal from './views/Journal'
-import Spread from './views/Spread'
-import Connect from './views/Connect'
-import MusicBox from './views/MusicBox'
 import NotFound from './views/NotFound'
-import Legal from './views/Legal'
 import { isISODate, isYearMonth } from './lib/route'
+
+// Rooms most visits never open are loaded when first needed, so the front page starts with less code.
+const loaders = {
+  settings: () => import('./views/Settings'),
+  arrival: () => import('./views/Arrival'),
+  double: () => import('./views/Double'),
+  stranger: () => import('./views/Stranger'),
+  spread: () => import('./views/Spread'),
+  connect: () => import('./views/Connect'),
+  music: () => import('./views/MusicBox'),
+  legal: () => import('./views/Legal'),
+}
+const Settings = lazy(loaders.settings)
+const Arrival = lazy(loaders.arrival)
+const Double = lazy(loaders.double)
+const Stranger = lazy(loaders.stranger)
+const Spread = lazy(loaders.spread)
+const Connect = lazy(loaders.connect)
+const MusicBox = lazy(loaders.music)
+const Legal = lazy(loaders.legal)
+
+/** Once someone is inside the app, fetch the remaining rooms quietly so they open without a wait. */
+function preloadRooms() {
+  const idle = (window as Window & { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500))
+  idle(() => Object.values(loaders).forEach((load) => load().catch(() => {})))
+}
 
 function useHash() {
   const [hash, setHash] = useState(() => window.location.hash.slice(1) || '/')
@@ -110,6 +128,11 @@ export default function App() {
   useEffect(() => {
     if (name === '' && hasEntered()) window.location.replace('#/today')
   }, [name])
+
+  const inside = ready && name !== '' && name !== 'welcome'
+  useEffect(() => {
+    if (inside) preloadRooms()
+  }, [inside])
 
   if (!ready) return <div className="boot" aria-busy="true"><span>Afterimage</span></div>
 
@@ -203,7 +226,7 @@ export default function App() {
   return (
     <>
       {error && <div className="banner-error" role="alert">{error}</div>}
-      {tab === null ? view : <Shell tab={tab}>{view}</Shell>}
+      <Suspense fallback={<div className="room-wait" aria-busy="true" />}>{tab === null ? view : <Shell tab={tab}>{view}</Shell>}</Suspense>
       {name !== '' && name !== 'welcome' && <Palette />}
       <Toaster />
     </>

@@ -54,9 +54,6 @@ function Privacy() {
         <li>
           <strong>Song links</strong> open the service you linked (Spotify, YouTube and so on). Nothing is sent to them until you click.
         </li>
-        <li>
-          <strong>Fonts</strong> are loaded from Google Fonts, so Google sees the address your browser connects from.
-        </li>
       </ul>
 
       <h2>Backups and deleting</h2>

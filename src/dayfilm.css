@@ -735,3 +735,31 @@
 .print.theme-night .margin-form textarea {
   color: var(--ink);
 }
+
+/* Letters are kept in a folder of aged paper rather than a black slab on a paper page.
+   The slab's components read the same --dr-* names, so only the palette changes. */
+.dark-slab {
+  --dr-bg: #ebe0cb;
+  --dr-bg-2: #e1d3ba;
+  --dr-ink: #2b231c;
+  --dr-muted: #65584a;
+  --dr-rule: rgb(43 35 28 / 0.18);
+  --dr-accent: #8e4429;
+  background: var(--dr-bg) url('/demo/textures/paper-ivory.jpg') center / 560px auto;
+  background-blend-mode: multiply;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 0 1px rgb(43 35 28 / 0.1),
+    inset 0 0 48px rgb(130 96 52 / 0.16);
+}
+/* the night print is dark paper already: its letters stay on the dark */
+.print.theme-night .dark-slab {
+  --dr-bg: #1d1814;
+  --dr-bg-2: #29221c;
+  --dr-ink: #efe4d3;
+  --dr-muted: #a89684;
+  --dr-rule: rgba(239, 228, 211, 0.16);
+  --dr-accent: #d3875f;
+  background: var(--dr-bg);
+  box-shadow: none;
+}

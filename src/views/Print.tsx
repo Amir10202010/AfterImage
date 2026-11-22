@@ -192,7 +192,7 @@ function PrintPage({ m, letters }: { m: Memory; letters: Letter[] }) {
               <ol className="timeline">
                 {m.moments.map((mo, i) => (
                   <li key={mo.id}>
-                    <span className="timeline-t">{mo.time ?? String(i + 1).padStart(2, '0')}</span>
+                    <span className="timeline-t">{mo.time ?? <span aria-label={`moment ${i + 1}`}>·</span>}</span>
                     <span>{mo.text}</span>
                   </li>
                 ))}

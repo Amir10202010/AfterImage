@@ -34,7 +34,7 @@ const STEPS: { target?: string[]; title: string; text: string }[] = [
   { target: ['today'], title: 'Today', text: 'What’s waiting for you: a letter that arrived, a day to develop, a small daily ritual.' },
   { target: ['journal'], title: 'Journal', text: 'All your photos, laid out by day like a scrapbook. Tap any day to open its notebook page.' },
   { target: ['add', 'add-mobile'], title: 'New', text: 'Save a day, bring in your gallery or Instagram, or write to future you. Nothing leaves this device.' },
-  { target: ['memories'], title: 'Memories', text: 'Saved days hang here as negatives. Open one and develop it — brush, sort, recall, meet.' },
+  { target: ['memories'], title: 'Memories', text: 'Every saved day becomes a page of your diary. Open one to play it with its song, or develop it in the darkroom.' },
   { target: ['letters'], title: 'Letters', text: 'Messages between you and the person you’ll be. Sealed ones open on their date.' },
 ]
 
