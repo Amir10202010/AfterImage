@@ -792,3 +792,30 @@
 .landing .l-ink-zone > .l-manifesto em {
   color: #e8c48a;
 }
+
+/* Reduced motion: the film is one still frame. Its top and bottom fade into the dark around it, so the hero
+   above and the words below meet it without a hard line; the caption stays above the fade. */
+@media (prefers-reduced-motion: reduce) {
+  .landing .l-film-dusk {
+    opacity: 1;
+    background: linear-gradient(180deg, #17110d 0%, rgba(23, 17, 13, 0) 26%, rgba(23, 17, 13, 0) 56%, #17110d 100%);
+  }
+  .landing .l-film-line {
+    z-index: 2;
+  }
+}
+
+/* The closing light stays a soft warm glow under paper rather than a wall of flame: the videos are
+   desaturated and the paper veil holds more of the frame. */
+.landing .l-morph-bg > video {
+  filter: blur(calc((1 - var(--enter)) * 9px)) saturate(calc(0.45 + var(--enter) * 0.27));
+}
+.landing .l-final-veil {
+  background: radial-gradient(
+    ellipse 64% 60% at 50% 46%,
+    rgba(243, 237, 226, 0.93) 0%,
+    rgba(243, 237, 226, 0.8) 45%,
+    rgba(243, 237, 226, 0.52) 80%,
+    rgba(243, 237, 226, 0.4) 100%
+  );
+}

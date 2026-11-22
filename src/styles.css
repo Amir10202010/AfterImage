@@ -7762,10 +7762,10 @@ a.letter-group-title:hover {
     filter: none !important;
     scale: none !important;
     rotate: none !important;
-    letter-spacing: 0.22em;
   }
-  .l-foot-mark b {
-    letter-spacing: normal;
+  /* only the kicker is tracked out; everything else keeps its own spacing */
+  .l-hero-kicker {
+    letter-spacing: 0.22em;
   }
   .l-btn::after {
     animation: none;

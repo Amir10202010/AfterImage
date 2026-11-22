@@ -2,9 +2,15 @@
 // city at dusk, and it folds back into the diary) whose time is the scroll. The video stays pinned to the
 // screen while the section scrolls past; scrolling up plays it backwards. A line of text belongs to each
 // chapter of the film and dissolves in and out with it.
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x))
+
+/**
+ * The shot opens on the same developing tray as the hero above it. The film starts three seconds in, on the
+ * closed diary, so the page never shows the same picture twice in a row; film-diary.jpg is that frame.
+ */
+const START = 3
 const ease = (x: number) => {
   const t = clamp01(x)
   return t * t * (3 - 2 * t)
@@ -19,6 +25,8 @@ const LINES = [
 ]
 
 export default function ScrollFilm() {
+  // with reduced motion the film is a still: its first frame is enough, the 12 MB video is not fetched
+  const [calm] = useState(() => !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
   const wrap = useRef<HTMLElement>(null)
   const film = useRef<HTMLVideoElement>(null)
   const lines = useRef<(HTMLDivElement | null)[]>([])
@@ -66,7 +74,7 @@ export default function ScrollFilm() {
       })
 
       if (v.duration) {
-        const want = p * (v.duration - 0.05)
+        const want = START + p * (v.duration - 0.05 - START)
         if (shown < 0) shown = want
         // the frame glides toward the scroll instead of jumping to it
         shown += (want - shown) * 0.22
@@ -97,7 +105,7 @@ export default function ScrollFilm() {
   return (
     <section className="l-film" ref={wrap} aria-label="The diary">
       <div className="l-film-stage">
-        <video ref={film} className="l-film-video" src="/media/paris-scroll.mp4" poster="/media/paris-scroll.jpg" muted playsInline preload="auto" aria-hidden="true" />
+        <video ref={film} className="l-film-video" src="/media/paris-scroll.mp4" poster="/media/film-diary.jpg" muted playsInline preload={calm ? 'none' : 'auto'} aria-hidden="true" />
         <span className="l-film-shade" aria-hidden="true" />
         {LINES.map((l, i) => (
           <div key={i} ref={(n) => void (lines.current[i] = n)} className={`l-film-line ${i % 2 ? 'is-right' : ''}`} style={{ opacity: 0 }}>
