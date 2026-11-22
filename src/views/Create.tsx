@@ -221,13 +221,14 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
         weather: weather || undefined,
         mood: mood || undefined,
         location: location || undefined,
+        people: people.split(',').map((x) => x.trim()).filter(Boolean),
         song: song.title.trim() ? { title: song.title, artist: song.artist, tempo, ...songFacts() } : undefined,
         photoCount: Math.max(1, photos.length),
         swatches: firstSwatches,
       }),
     // songFacts reads facts
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [story, date, time, weather, mood, location, song.title, song.artist, tempo, facts, photos.length, firstSwatches],
+    [story, date, time, weather, mood, location, people, song.title, song.artist, tempo, facts, photos.length, firstSwatches],
   )
   // the darkroom's light follows the same rules as the page, so a day looks like itself everywhere
   const autoTheme: Theme = ({ monet: 'autumn', collage: 'autumn', film: 'paper', ma: 'paper', kandinsky: 'night' } as const)[preview.technique]

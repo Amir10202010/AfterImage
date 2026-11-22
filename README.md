@@ -61,7 +61,7 @@ Keys live in `localStorage` only and never enter backups; the profile, queue, pl
 
 | Where | What |
 |---|---|
-| Front page | Masthead, letters that have **arrived**, the **drying line** (negatives by year), **unfinished threads** you can stamp on the spot, letters **in the post**, contents |
+| Today `#/today` | One thing to do next (a letter that **arrived**, a day to develop), three small rituals, and your latest photos |
 | Darkroom `#/develop/:id` | Up to five baths, depending on what the day contains:<br>**Surface:** brush away leaves, dust or static to uncover the small things you kept (finger, mouse or Space)<br>**Sequence:** put the moments back in order; strips in the right place lock<br>**Recall:** guess a missing word in your own sentence, with letter-by-letter feedback<br>**Ledger:** stamp past promises *Kept · Changed · Let go · Still trying*<br>**Meeting:** read the letter paragraph by paragraph, then answer and seal it |
 | Print `#/print/:id` | The folder of the day: its page (plays the song, can read itself aloud), why the page looks like this, contact strip, song, original story, timeline, details, ledger, correspondence, and "what I remember now" margin notes |
 | Memories `#/memories` | The diary page by page, or the drying line; search and filters; unfinished threads |

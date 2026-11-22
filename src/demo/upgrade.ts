@@ -46,7 +46,7 @@ export async function upgradeDemoAssets() {
   const refresh = version < PHOTOS_VERSION
   let failed = 0
 
-  // 1 · the three demo memories: main photograph + extra frames for the contact strip
+  // 1 · the demo memories: main photograph + extra frames for the contact strip
   const memories = st.memories.filter((x) => x.demo && x.art && (x.photoIds.length === 0 || (refresh && x.photoIds.length === V1_FRAMES)))
   for (const m of memories) {
     const names = [m.art!, `${m.art}-2`, `${m.art}-3`, `${m.art}-4`]
