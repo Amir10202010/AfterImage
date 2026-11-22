@@ -180,20 +180,25 @@ No API key is required for any feature.
 * **Motion.** Slow. Things settle rather than bounce. The darkroom tray rocks at the song's tempo.
 * **Avoid.** Gradients-as-decoration, neon, glass, rounded card grids, gamified counters.
 
-## 6. The three demo memories (fictional)
+## 6. The demo memories (fictional)
 
-All three are clearly labelled as fictional demonstration content. Their "photographs" are
-original SVG compositions drawn for this project; their songs are fictional.
+All five are clearly labelled as fictional demonstration content. Their photographs were generated
+for this project (original SVG drawings stand in while they load); their songs are fictional. Each
+one gets a different technique on its page of the day (see SUBMISSION.md).
 
-* **A — The Autumn Afternoon.** Park, friends, coffee, leaves. Baths: Surface (brush away
+* **A — Autumn afternoon in Linden Park** (Impressionist light). Park, friends, coffee, leaves. Baths: Surface (brush away
   leaves to find the receipt, the scarf, the bench plaque) → Sequence → Recall → Meeting.
   Warm amber safelight, a slow piano-like soundscape.
-* **B — The Ambition (2019, age 17).** Notebook at a desk. Baths: Recall → Ledger (stamp each
+* **B — Spring night of big plans (2019, age 17)** (faded film). Notebook at a desk. Baths: Recall → Ledger (stamp each
   ambition: still a millionaire plan?) → Meeting with an existing thread: the 2019 letter,
   a 2022 reply, and now your turn. Daylight paper and ink.
-* **C — The Night Everything Was Due.** 21:30 → 05:12, a deadline, electronic music.
+* **C — Night before the deadline** (geometric composition). 21:30 → 05:12, a deadline, electronic music.
   Baths: Surface (wipe static off the screen) → Sequence of timestamped commits at 124 bpm →
   Recall → Meeting. Phosphor on black, a pulsing kick.
+* **D — Autumn evening at the concert** (cut-paper collage). A tram across town, a crowd, a lost
+  voice, indie rock at 132 bpm in a major key.
+* **E — Autumn evening after a goodbye** (ma). A friend leaves for Lisbon; sleet at the bus stop,
+  ambient piano at 66 bpm in a minor key.
 
 ## 7. Engineering
 
