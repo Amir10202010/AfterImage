@@ -20,3 +20,22 @@ describe('cropBox', () => {
     }
   })
 })
+
+describe('drawFromWords on a server without image keys', () => {
+  it('reports "unavailable" (drawing is simply off), not a failure to retry', async () => {
+    const { DrawUnavailable, drawFromWords } = await import('./imagine')
+    const real = globalThis.fetch
+    try {
+      for (const status of [503, 404]) {
+        globalThis.fetch = async () => new Response(JSON.stringify({ error: 'Picture drawing is not set up on this server.' }), { status, headers: { 'content-type': 'application/json' } })
+        await expect(drawFromWords({ story: 'x' })).rejects.toBeInstanceOf(DrawUnavailable)
+      }
+      globalThis.fetch = async () => new Response(JSON.stringify({ error: 'busy' }), { status: 429, headers: { 'content-type': 'application/json' } })
+      const err = await drawFromWords({ story: 'x' }).catch((e) => e)
+      expect(err).toBeInstanceOf(Error)
+      expect(err).not.toBeInstanceOf(DrawUnavailable)
+    } finally {
+      globalThis.fetch = real
+    }
+  })
+})

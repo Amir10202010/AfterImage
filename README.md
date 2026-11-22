@@ -6,6 +6,17 @@ Each day you save becomes a **negative** on the drying line. To see it again, yo
 
 The creative exploration and design rationale are in [DESIGN.md](DESIGN.md).
 
+### The brief: *Make the Invisible Visible*
+
+One day (text, photos, a song) becomes one **day card**: the same 4:5 frame every time, with a technique, palette, grain and rhythm worked out from the day itself, an explanation of every choice, a synthesised narration, and a 3–7 word folder name. The song visibly drives the card: its bpm sets how long each photo stays, its energy the contrast and pulse, its key the colour, its year the grain.
+
+| Document (in Russian, for the jury) | |
+|---|---|
+| [docs/DESCRIPTION.md](docs/DESCRIPTION.md) | The project on one page |
+| [docs/TECHNIQUES.md](docs/TECHNIQUES.md) | Mood → art technique table; constant vs. variable; how music and voice are chosen |
+| [docs/TOOLS.md](docs/TOOLS.md) | Libraries, browser APIs, external services and AI used |
+| [docs/DEMO.md](docs/DEMO.md) | How to run it, the demo days, the video script, where each requirement lives in the code |
+
 ## Run it
 
 ```bash
@@ -61,7 +72,8 @@ Keys live in `localStorage` only and never enter backups; the profile, queue, pl
 |---|---|
 | Front page | Masthead, letters that have **arrived**, the **drying line** (negatives by year), **unfinished threads** you can stamp on the spot, letters **in the post**, contents |
 | Darkroom `#/develop/:id` | Up to five baths, depending on what the day contains:<br>**Surface:** brush away leaves, dust or static to uncover the small things you kept (finger, mouse or Space)<br>**Sequence:** put the moments back in order; strips in the right place lock<br>**Recall:** guess a missing word in your own sentence, with letter-by-letter feedback<br>**Ledger:** stamp past promises *Kept · Changed · Let go · Still trying*<br>**Meeting:** read the letter paragraph by paragraph, then answer and seal it |
-| Print `#/print/:id` | The developed day as an editorial page: photograph, contact strip, song, original story, timeline, details, ledger, correspondence, and "what I remember now" margin notes |
+| Print `#/print/:id` | The developed day as an editorial page. It opens with the **day card** and **Why it looks like this** (technique, scores, every reason, constant vs. variable), **Listen** and **Read it aloud**; then photograph, contact strip, song, original story, timeline, details, ledger, correspondence, and "what I remember now" margin notes. At the foot, **Download the day folder** saves a ZIP: story, photos, song data (never the audio), the card as PNG, how it was made, and the narration |
+| Side by side `#/feed` | The last 5–7 days as day cards in a row: one frame, a different weather inside each. Linked from Memories |
 | Expose `#/new` | Five frames: story → photos & song → context → *what we noticed* (an editable review of everything the reader extracted) → a letter forward |
 | Correspondence `#/letters` | Every letter grouped by day; write to a future you or to a past you; a letter can be edited for 24 hours after you write it |
 | Enlarger `#/double/:a/:b` | **Double exposure.** Drag one day's frame over another's. Shared people, places, songs, seasons and words come through as they line up, each word shown in both original sentences. Caption it and keep it |
@@ -85,4 +97,4 @@ The landing page and the Today card use eight short clips in `public/media/` (ge
 
 ## Demo content
 
-The three demo days (*The Autumn Afternoon*, *The Ambition*, *The Night Everything Was Due*) belong to a **fictional** person. Their pictures are original SVG illustrations drawn for this project (`src/demo/art.ts`). Their songs and artists are invented. The demo "camera roll" in the journal (October–November 2025) is also made of original SVG scenes (`src/demo/shoebox.ts`). You can restore them from the colophon at the bottom of the front page.
+The six demo days belong to a **fictional** person, one for each technique: *The Autumn Afternoon* (impression), *The Ambition at Seventeen* (nocturne), *The Night Everything Was Due* (Kandinsky), *The Longest Picnic of September* (collage, the detailed "favourite day"), *The First Frost, Alone* (ma) and *Grandma’s Records, One Evening* (found film). Their songs and artists are invented. Their photographs are generated (`public/demo/`, see `scripts/gen_photos.py`); without those files the app falls back to original SVG illustrations (`src/demo/art.ts`, `src/demo/shoebox.ts`). Restore them under Settings → **Restore demo days**.

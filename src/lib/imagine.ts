@@ -30,6 +30,9 @@ async function crop(src: Blob, ratio: number): Promise<Blob> {
   }
 }
 
+/** The server has no image keys (503) or no /api route at all (404): drawing is simply off here. */
+export class DrawUnavailable extends Error {}
+
 export type DrawInput = { story: string; title?: string; place?: string; time?: string; weather?: string; mood?: string; date?: string }
 
 export async function drawFromWords(input: DrawInput, signal?: AbortSignal): Promise<Drawn> {
@@ -44,7 +47,8 @@ export async function drawFromWords(input: DrawInput, signal?: AbortSignal): Pro
       .json()
       .then((j: { error?: string }) => j.error)
       .catch(() => undefined)
-    throw new Error(msg ?? (r.status === 404 ? 'Picture drawing is not available here.' : 'The picture could not be drawn right now.'))
+    if (r.status === 503 || r.status === 404) throw new DrawUnavailable(msg ?? 'Picture drawing is not available here.')
+    throw new Error(msg ?? 'The picture could not be drawn right now.')
   }
   const prompt = decodeURIComponent(r.headers.get('x-imagine-prompt') ?? '')
   return { blob: await crop(await r.blob(), 3 / 2), prompt }

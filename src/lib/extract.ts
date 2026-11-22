@@ -98,11 +98,15 @@ export function extractRecall(story: string, max = 3, avoid: string[] = []): Rec
 const INTENT =
   /\b(I(?:'|’)?m going to|I am going to|I(?:'|’)?m gonna|I will|I(?:'|’)ll|I want to|I wanna|I promise|I need to|I have to|I plan to|I hope to|I should|we should|we(?:'|’)ll|we will|next time|one day I|someday)\b/i
 
+// the same, for Russian (\b only knows ASCII, so the word edges are written out)
+const INTENT_RU =
+  /(?<!\p{L})(я хочу|хочу|хотим|я буду|я обещаю|обещаю|мне нужно|нужно|надо|я должен|я должна|я собираюсь|собираюсь|я планирую|попробую|постараюсь|давай|давайте|в следующий раз|когда-нибудь|однажды я)(?!\p{L})/iu
+
 export function extractThreads(story: string, max = 5): Thread[] {
   const out: Thread[] = []
   for (const s of sentences(story)) {
     if (/\?\s*["'”’]?$/.test(s)) out.push({ id: id('t'), quote: s, kind: 'question' })
-    else if (INTENT.test(s)) out.push({ id: id('t'), quote: s, kind: 'intention' })
+    else if (INTENT.test(s) || INTENT_RU.test(s)) out.push({ id: id('t'), quote: s, kind: 'intention' })
   }
   return out.slice(0, max)
 }
@@ -110,10 +114,13 @@ export function extractThreads(story: string, max = 5): Thread[] {
 export function suggestTitles(story: string, location?: string, date?: string): string[] {
   const out: string[] = []
   const ss = sentences(story)
-  const rec = extractRecall(story, 1)[0]
+  // a Russian story gets Russian titles: an English frame around an inflected word ("The рассказала day") reads as a bug
+  const ru = (story.match(/[а-яё]/gi)?.length ?? 0) > (story.match(/[a-z]/gi)?.length ?? 0)
+  const loc = ru ? 'ru-RU' : 'en-GB'
+  const rec = ru ? undefined : extractRecall(story, 1)[0]
   if (rec) out.push(`The ${rec.word.toLowerCase()} day`)
   if (location) {
-    const month = date ? new Date(date + 'T12:00').toLocaleDateString('en-GB', { month: 'long' }) : ''
+    const month = date ? new Date(date + 'T12:00').toLocaleDateString(loc, { month: 'long' }) : ''
     out.push(`${location}${month ? ', ' + month : ''}`)
   }
   if (ss[0]) {
@@ -121,7 +128,10 @@ export function suggestTitles(story: string, location?: string, date?: string): 
     out.push(first + (ss[0].split(/\s+/).length > 6 ? '…' : ''))
   }
   const d = date ? new Date(date + 'T12:00') : new Date()
-  out.push(`A ${d.toLocaleDateString('en-GB', { weekday: 'long' })} in ${d.toLocaleDateString('en-GB', { month: 'long' })}`)
+  if (ru) {
+    const day = d.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })
+    out.push(day.charAt(0).toUpperCase() + day.slice(1))
+  } else out.push(`A ${d.toLocaleDateString('en-GB', { weekday: 'long' })} in ${d.toLocaleDateString('en-GB', { month: 'long' })}`)
   return [...new Set(out)].slice(0, 4)
 }
 

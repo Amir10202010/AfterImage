@@ -7,7 +7,8 @@ export const BPM: Record<Tempo, number> = { slow: 72, mid: 96, fast: 124 }
 
 const midi = (n: number) => 440 * Math.pow(2, (n - 69) / 12)
 
-type Profile = { tempo: Tempo; seed: string }
+/** bpm, when known (measured or typed), replaces the tempo's default beat */
+type Profile = { tempo: Tempo; seed: string; bpm?: number }
 
 class Soundscape {
   private ctx?: AudioContext
@@ -57,6 +58,13 @@ class Soundscape {
     this.timer = window.setInterval(() => this.schedule(), 40)
   }
 
+  /** Lowers the music under a voice (narration), and brings it back. */
+  duck(on: boolean) {
+    if (!this.playing || !this.ctx || !this.master || !this.profile) return
+    const level = this.profile.tempo === 'fast' ? 0.5 : 0.6
+    this.master.gain.setTargetAtTime(on ? level * 0.3 : level, this.ctx.currentTime, 0.25)
+  }
+
   stop() {
     this.playing = false
     if (!this.ctx || !this.master) return
@@ -75,7 +83,7 @@ class Soundscape {
   private schedule() {
     const ctx = this.ctx!
     const p = this.profile!
-    const spb = 60 / BPM[p.tempo]
+    const spb = 60 / (p.bpm ?? BPM[p.tempo])
     while (this.nextBeat < ctx.currentTime + 0.2) {
       this.play(this.beat, this.nextBeat, spb, p)
       this.nextBeat += spb
@@ -222,6 +230,15 @@ class Soundscape {
 }
 
 export const sound = new Soundscape()
+
+/** Fired when a voice starts or stops, so whatever music is playing can step back. */
+export const DUCK_EVENT = 'afterimage:duck'
+
+/** Lowers both kinds of music — the generated soundscape and the user's own audio file. */
+export function duckMusic(on: boolean) {
+  sound.duck(on)
+  window.dispatchEvent(new CustomEvent(DUCK_EVENT, { detail: on }))
+}
 
 const KEY = 'afterimage.sound'
 export function soundPreferred() {

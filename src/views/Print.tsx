@@ -6,7 +6,18 @@ import Photo, { fadeOf } from '../components/Photo'
 import { AppVoice, Back, ConfirmButton, PastLabel, StampMark, StampSet } from '../components/common'
 import { LetterReader, ReadLetter, ReplyComposer, SealedLetter, markOpened } from '../components/Conversation'
 import { SoundToggle, memoryStyle } from './Darkroom'
+import DayCard from '../components/DayCard'
+import { useDayCard } from '../components/useDayCard'
+import WhyPanel from '../components/WhyPanel'
+import ReadAloud from '../components/ReadAloud'
 import { go } from '../App'
+import { memoryPhotos } from '../lib/store'
+import { artUrl } from '../demo/art'
+import { renderCardPng } from '../lib/cardImage'
+import { dayFolderFiles, dayFolderName } from '../lib/dayfolder'
+import { writeZip } from '../lib/zip'
+import { downloadBlob } from '../lib/backup'
+import { toast } from '../lib/toast'
 
 export default function Print({ id }: { id: string }) {
   const { memories, letters } = useStore()
@@ -60,6 +71,8 @@ function PrintPage({ m, letters }: { m: Memory; letters: Letter[] }) {
           </ConfirmButton>
         </nav>
       </header>
+
+      <DaySheet m={m} />
 
       <section className="print-hero">
         <div className="print-photo-wrap">
@@ -122,7 +135,6 @@ function PrintPage({ m, letters }: { m: Memory; letters: Letter[] }) {
                 <span className="record-title">{m.song.title}</span>
                 <span className="record-artist">{m.song.artist}</span>
                 <div className="row">
-                  <SoundToggle m={m} />
                   {m.song.url && (
                     <a className="link" href={m.song.url} target="_blank" rel="noreferrer noopener">
                       Open the song ↗
@@ -283,6 +295,27 @@ function PrintPage({ m, letters }: { m: Memory; letters: Letter[] }) {
   )
 }
 
+/**
+ * The memory of the day as one card, and beside it why it looks the way it does.
+ * The song's player lives here, so the card's rhythm and the music start together.
+ */
+function DaySheet({ m }: { m: Memory }) {
+  const card = useDayCard(m)
+  const [spoken, setSpoken] = useState<string>()
+  return (
+    <section className="day-sheet" aria-label="The memory card">
+      <div className="day-sheet-card">
+        <DayCard m={m} card={card} spoken={spoken} />
+        <div className="day-sheet-controls">
+          <SoundToggle m={m} />
+          <ReadAloud story={m.story} card={card} onLine={setSpoken} />
+        </div>
+      </div>
+      <WhyPanel card={card} />
+    </section>
+  )
+}
+
 /** Downloads the original words of this day as a plain text file — a copy that outlives the app. */
 function SaveCopy({ m }: { m: Memory }) {
   const { letters } = useStore()
@@ -309,7 +342,39 @@ function SaveCopy({ m }: { m: Memory }) {
       <button type="button" className="link" onClick={download}>
         Save as text
       </button>
+      <DownloadFolder m={m} />
     </footer>
+  )
+}
+
+/** The whole day as one folder (a ZIP): words, photos, song data, the card, how it was made, the narration. */
+function DownloadFolder({ m }: { m: Memory }) {
+  const card = useDayCard(m)
+  const { letters } = useStore()
+  const [busy, setBusy] = useState(false)
+  const run = async () => {
+    setBusy(true)
+    try {
+      let photos = await memoryPhotos(m)
+      // a day without photos of its own is drawn: keep that drawing
+      if (!photos.length && m.art) photos = [await (await fetch(artUrl(m.art))).blob()]
+      const urls = photos.map((b) => URL.createObjectURL(b))
+      const cardPng = await renderCardPng(card, urls, m.date).catch(() => undefined)
+      urls.forEach((u) => URL.revokeObjectURL(u))
+      const open = letters.filter((l) => l.memoryId === m.id && letterStatus(l) !== 'sealed')
+      const zip = await writeZip(dayFolderFiles({ m, card, photos, cardPng, letters: open }))
+      downloadBlob(zip, `${dayFolderName(m, card.title)}.zip`)
+      toast('The day folder is in your downloads.')
+    } catch (e) {
+      toast('Could not pack this day: ' + String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <button type="button" className="link print-foot-folder" onClick={run} disabled={busy} title="Story, photos, song data, the card and the narration, as one .zip">
+      {busy ? 'Packing the day…' : 'Download the day folder'}
+    </button>
   )
 }
 

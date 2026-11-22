@@ -3,7 +3,7 @@ import { updateMemory, useBlobUrl, useStore } from '../lib/store'
 import type { BathId, Memory } from '../lib/types'
 import { longDate, roman } from '../lib/time'
 import { accentFor } from '../lib/prompts'
-import { BPM, setSoundPreferred, sound, soundPreferred } from '../lib/sound'
+import { BPM, DUCK_EVENT, setSoundPreferred, sound, soundPreferred } from '../lib/sound'
 import Photo from '../components/Photo'
 import { Back } from '../components/common'
 import Surface from '../baths/Surface'
@@ -28,7 +28,7 @@ export interface BathProps {
 }
 
 export function memoryStyle(m: Memory): CSSProperties {
-  const bpm = BPM[m.song?.tempo ?? 'slow']
+  const bpm = m.song?.bpm ?? BPM[m.song?.tempo ?? 'slow']
   return { '--accent': accentFor(m), '--beat': `${60 / bpm}s`, '--rock': `${(60 / bpm) * 8}s` } as CSSProperties
 }
 
@@ -163,7 +163,7 @@ export function SoundToggle({ m }: { m: Memory }) {
     if (audioUrl && audio.current) {
       audio.current.volume = 0.6
       audio.current.play().catch(() => setOn(false))
-    } else sound.start({ tempo: m.song?.tempo ?? 'slow', seed: m.song ? m.song.title + m.song.artist : m.id })
+    } else sound.start({ tempo: m.song?.tempo ?? 'slow', bpm: m.song?.bpm, seed: m.song ? m.song.title + m.song.artist : m.id })
     setOn(true)
   }, [audioUrl, m.id, m.song])
 
@@ -191,6 +191,15 @@ export function SoundToggle({ m }: { m: Memory }) {
   }, [start])
 
   useEffect(() => () => stop(), [stop])
+
+  // step back while the day is being read aloud
+  useEffect(() => {
+    const onDuck = (e: Event) => {
+      if (audio.current) audio.current.volume = (e as CustomEvent<boolean>).detail ? 0.15 : 0.6
+    }
+    window.addEventListener(DUCK_EVENT, onDuck)
+    return () => window.removeEventListener(DUCK_EVENT, onDuck)
+  }, [])
 
   const label = m.song ? `${m.song.title} — ${m.song.artist}` : 'darkroom'
   return (

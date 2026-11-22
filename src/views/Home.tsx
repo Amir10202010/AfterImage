@@ -77,6 +77,12 @@ export default function Memories() {
           <h2 id="line-h">The drying line</h2>
           <p className="section-meta">
             {memories.length} {memories.length === 1 ? 'day' : 'days'} · {developed} developed
+            {memories.length > 1 && (
+              <>
+                {' · '}
+                <a href="#/feed">Side by side</a>
+              </>
+            )}
           </p>
         </div>
         {memories.length > 2 && (
@@ -273,11 +279,11 @@ export function Colophon() {
         the app is marked <span className="app-mark">◇</span>.
       </p>
       <p>
-        The three demo days — the autumn afternoon, the ambition, the night everything was due — belong to a fictional
-        person. Their photographs are illustrations made for this project; their songs and artists are invented.
+        The six demo days (the autumn afternoon, the ambition, the night everything was due, the picnic, the first frost and
+        grandma’s records) belong to a fictional person. Their photographs are generated for this project; their songs and artists are invented.
       </p>
       <p className="colophon-actions">
-        <ConfirmButton confirm="Put the three demo days back as they were?" onConfirm={() => restoreDemos().then(() => toast('The demo days are back.'))}>
+        <ConfirmButton confirm="Put the demo days back as they were?" onConfirm={() => restoreDemos().then(() => toast('The demo days are back.'))}>
           Restore demo days
         </ConfirmButton>
         <ConfirmButton

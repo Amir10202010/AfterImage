@@ -53,7 +53,7 @@ export function buildDemo(now: Date): { memories: Memory[]; letters: Letter[] } 
   const ambition: Memory = {
     ...base,
     id: 'demo-ambition',
-    title: 'The Ambition',
+    title: 'The Ambition at Seventeen',
     date: '2019-03-03',
     time: '23:40',
     location: 'My bedroom desk',
@@ -192,5 +192,110 @@ Go to sleep.`,
     },
   ]
 
-  return { memories: [autumn, ambition, night], letters }
+  return { memories: [autumn, ambition, night, ...moreDays(created)], letters }
+}
+
+/**
+ * Three more demo days, added later so the feed has a full week and every technique shows up once.
+ * Their photos are frames from the demo camera roll (see DEMO_PHOTOS in demo/upgrade.ts).
+ */
+export const MORE_DEMO_IDS = ['demo-picnic', 'demo-frost', 'demo-records'] as const
+
+function moreDays(created: string): Memory[] {
+  // the favourite day: the most detailed one, written as the day the person would keep
+  const picnic: Memory = {
+    ...base,
+    id: 'demo-picnic',
+    title: 'The Longest Picnic of September',
+    date: '2025-09-07',
+    time: '16:00',
+    location: 'Kessel Park',
+    people: ['Mira', 'Tom', 'Jonas', 'Lena', 'Ada', 'Sami', 'Noor'],
+    weather: 'Warm, 24°, a breeze after five',
+    mood: 'Happy, all day',
+    art: 'picnic',
+    story: `If I could keep one day from this year, it's this one. It started at the Saturday market, where Ada bought a whole paper bag of plums because the man said they were the last good ones. We carried everything up the hill: two blankets, a speaker, a watermelon nobody had a knife for. Tom solved the watermelon with a frisbee edge and Lena laughed so hard she cried. By three, two more friends from Ada's course had found us and it turned into a party. Mira performed the worst poems from a paperback she found in a free box, in a dramatic voice, and we voted on the worst one. Then Jonas turned the speaker up way too loud and we danced barefoot on the blankets until his sunglasses flew into the grass. At six we raced the bikes home the long way past the wheat field, all five of us in a line, shouting the chorus of the one song we all know. The sun was low and gold and the field looked like it was on fire. I never want to forget the sound of everyone laughing at the same time. Let's do this again before the summer is completely over.`,
+    song: { title: 'Golden Hour Parade', artist: 'The Sunday Kites (fictional)', tempo: 'fast', bpm: 128, mode: 'major', genre: 'pop', year: 2024, energy: 0.92, bpmSource: 'typed' },
+    details: ['A paper bag of plums from the last stall', 'The watermelon, opened with a frisbee', 'Mira’s worst poem of the day: “Ode to a Parking Ticket”', 'Jonas’s sunglasses, lost in the grass mid-dance', 'Five bikes in a line past the wheat field'],
+    moments: [
+      { id: 'p1', time: '10:30', text: 'Ada bought a whole paper bag of plums' },
+      { id: 'p2', time: '13:00', text: 'We carried everything up the hill' },
+      { id: 'p3', text: 'Tom solved the watermelon with a frisbee edge and Lena laughed so hard she cried' },
+      { id: 'p4', time: '15:30', text: 'Mira performed the worst poems from a paperback she found in a free box' },
+      { id: 'p5', text: 'we danced barefoot on the blankets until his sunglasses flew into the grass' },
+      { id: 'p6', time: '18:00', text: 'we raced the bikes home the long way past the wheat field' },
+    ],
+    recall: [
+      { id: 'pr1', sentence: 'It started at the Saturday market, where Ada bought a whole paper bag of plums because the man said they were the last good ones.', word: 'plums' },
+      { id: 'pr2', sentence: 'Tom solved the watermelon with a frisbee edge and Lena laughed so hard she cried.', word: 'frisbee' },
+      { id: 'pr3', sentence: 'Then Jonas turned the speaker up way too loud and we danced barefoot on the blankets until his sunglasses flew into the grass.', word: 'barefoot' },
+    ],
+    threads: [
+      { id: 'pt1', quote: 'I never want to forget the sound of everyone laughing at the same time.', kind: 'intention' },
+      { id: 'pt2', quote: "Let's do this again before the summer is completely over.", kind: 'intention' },
+    ],
+    theme: 'autumn',
+    cover: 'leaves',
+    baths: ['surface', 'sequence', 'recall', 'ledger', 'meeting'],
+    createdAt: created,
+  }
+
+  const frost: Memory = {
+    ...base,
+    id: 'demo-frost',
+    title: 'The First Frost, Alone',
+    date: '2025-11-07',
+    time: '08:30',
+    location: 'The field road behind the station',
+    people: [],
+    weather: 'Fog, −1°, first frost',
+    mood: 'Quiet',
+    art: 'frost',
+    story: `Woke up before the alarm. The car outside was covered in the first frost, thin white ferns all over the windshield. I didn't take the car. I walked the field road behind the station instead. The fog was so thick the power poles disappeared one by one into white. No one else was out. I could hear my own steps and nothing else. At home I put the dried hydrangeas from the summer in the jar on the shelf. Nothing to do, nowhere to be. It was enough.`,
+    song: { title: 'Field in White', artist: 'Ilse Marin (fictional)', tempo: 'slow', bpm: 58, mode: 'minor', genre: 'ambient piano', energy: 0.12, bpmSource: 'typed' },
+    details: ['Frost ferns on the windshield', 'Power poles fading into the fog', 'Dried hydrangeas in the glass jar'],
+    moments: [
+      { id: 'f1', time: '07:40', text: 'The car outside was covered in the first frost' },
+      { id: 'f2', time: '08:30', text: 'I walked the field road behind the station instead' },
+      { id: 'f3', time: '10:00', text: 'I put the dried hydrangeas from the summer in the jar on the shelf' },
+    ],
+    recall: [{ id: 'fr1', sentence: 'The fog was so thick the power poles disappeared one by one into white.', word: 'poles' }],
+    threads: [],
+    theme: 'paper',
+    cover: 'dust',
+    baths: ['surface', 'recall', 'meeting'],
+    createdAt: created,
+  }
+
+  const records: Memory = {
+    ...base,
+    id: 'demo-records',
+    title: 'Grandma’s Records, One Evening',
+    date: '2025-09-28',
+    time: '20:30',
+    location: 'Grandma’s flat on Weaver Street',
+    people: ['Grandma'],
+    weather: 'Rain in the evening',
+    mood: 'Nostalgic, tender',
+    art: 'records',
+    story: `Spent the evening at Grandma's helping her sort the old records. She remembers where she bought every single one. When I was little I used to fall asleep in this armchair while she played the same jazz album every Sunday, and tonight she put it on again without saying anything. The needle crackles in the same place it always did. She found a letter from Grandpa tucked in one of the sleeves, from 1974, and read it by the candle because the lamp is too bright for her eyes now. I didn't understand all of it but I understood her face. I want to remember the smell of the paper sleeves. I'm taking the armchair blanket home; she insisted.`,
+    song: { title: 'Weaver Street Waltz', artist: 'Otto Brand Trio (fictional)', tempo: 'slow', bpm: 84, mode: 'major', genre: 'jazz', year: 1972, energy: 0.3, bpmSource: 'typed' },
+    details: ['The crackle at the same spot of side B', 'Grandpa’s letter from 1974, in a record sleeve', 'The wool blanket from the armchair'],
+    moments: [
+      { id: 'r1', time: '18:00', text: "Spent the evening at Grandma's helping her sort the old records" },
+      { id: 'r2', text: 'tonight she put it on again without saying anything' },
+      { id: 'r3', time: '21:30', text: 'She found a letter from Grandpa tucked in one of the sleeves' },
+    ],
+    recall: [
+      { id: 'rr1', sentence: 'The needle crackles in the same place it always did.', word: 'needle' },
+      { id: 'rr2', sentence: "I'm taking the armchair blanket home; she insisted.", word: 'blanket' },
+    ],
+    threads: [{ id: 'rt1', quote: 'I want to remember the smell of the paper sleeves.', kind: 'intention' }],
+    theme: 'paper',
+    cover: 'dust',
+    baths: ['surface', 'sequence', 'recall', 'meeting'],
+    createdAt: created,
+  }
+
+  return [picnic, frost, records]
 }

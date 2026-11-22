@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { putBlob, saveLetter, saveMemory, uid, useBlobUrl, useStore } from '../lib/store'
-import type { Cover, Memory, Moment, RecallItem, Tempo, Theme, Thread } from '../lib/types'
+import type { Cover, Memory, Mode, Moment, RecallItem, Tempo, Theme, Thread } from '../lib/types'
+import { analyzeAudioFile, tempoFromBpm, type AudioReading } from '../lib/audio'
 import {
   bathsFor,
   coverFor,
@@ -18,7 +19,7 @@ import { todayISO, roman } from '../lib/time'
 import { AppVoice, Back, InfoTip, SealPicker, sealToDate, type SealChoice } from '../components/common'
 import Photo from '../components/Photo'
 import { BATH_NAMES } from './Darkroom'
-import { drawFromWords, drawPref, setDrawPref } from '../lib/imagine'
+import { DrawUnavailable, drawFromWords, drawPref, setDrawPref } from '../lib/imagine'
 
 const STEPS = ['The day', 'What you kept', 'Around it', 'What we noticed', 'A letter forward']
 const WEATHER = ['Sun', 'Cold sun', 'Clouds', 'Rain', 'Snow', 'Wind', 'Heat', 'Fog']
@@ -27,6 +28,11 @@ const TEMPOS: [Tempo, string][] = [
   ['slow', 'Slow & warm'],
   ['mid', 'Steady'],
   ['fast', 'Fast & electric'],
+]
+const MODES: [Mode | '', string][] = [
+  ['major', 'Major · bright'],
+  ['minor', 'Minor · shadowed'],
+  ['', 'Not sure'],
 ]
 const THEMES: [Theme, string, string][] = [
   ['autumn', 'Amber', 'Warm safelight, leaves to brush away'],
@@ -86,6 +92,36 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
   const [song, setSong] = useState({ title: editing?.song?.title ?? '', artist: editing?.song?.artist ?? '', url: editing?.song?.url ?? '' })
   const [tempo, setTempo] = useState<Tempo>(editing?.song?.tempo ?? 'slow')
   const [audio, setAudio] = useState<{ id?: string; file?: File } | null>(editing?.song?.audioId ? { id: editing.song.audioId } : null)
+  // what was said about the song; together with the measured numbers it shapes the card
+  const [genre, setGenre] = useState(editing?.song?.genre ?? '')
+  const [year, setYear] = useState(editing?.song?.year ? String(editing.song.year) : '')
+  const [mode, setMode] = useState<Mode | ''>(editing?.song?.mode ?? '')
+  const [songNote, setSongNote] = useState(editing?.song?.description ?? '')
+  const [measured, setMeasured] = useState<Pick<AudioReading, 'bpm' | 'energy'> | null>(
+    editing?.song?.bpmSource === 'measured' && editing.song.bpm ? { bpm: editing.song.bpm, energy: editing.song.energy ?? 0.5 } : null,
+  )
+  const [listening, setListening] = useState<'idle' | 'busy' | 'no-beat' | 'failed'>('idle')
+
+  /** Listens to the chosen file on the device and sets the tempo from it. */
+  const chooseAudio = async (file: File) => {
+    setAudio({ file })
+    setMeasured(null)
+    setListening('busy')
+    try {
+      const r = await analyzeAudioFile(file)
+      if (r.confidence < 0.15) {
+        // no steady beat (a voice note, an ambient piece): keep the energy, leave the tempo to the chips
+        setMeasured(null)
+        setListening('no-beat')
+        return
+      }
+      setMeasured({ bpm: Math.round(r.bpm), energy: r.energy })
+      setTempo(tempoFromBpm(r.bpm))
+      setListening('idle')
+    } catch {
+      setListening('failed')
+    }
+  }
   // 3
   const [time, setTime] = useState(editing?.time ?? shotTime)
   const [location, setLocation] = useState(editing?.location ?? '')
@@ -108,6 +144,8 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
   const [drawOn, setDrawOn] = useState(() => !editing && drawPref())
   const [drawing, setDrawing] = useState(false)
   const [drawErr, setDrawErr] = useState('')
+  // no keys on this server: drawing is off for this session, quietly, and the day saves as usual
+  const [drawOff, setDrawOff] = useState(false)
   const drawnFor = useRef('')
   const drawAbort = useRef<AbortController | null>(null)
   const drawnItem = photos.find((p) => p.drawn)
@@ -130,7 +168,9 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
         return rest.length ? [...rest, item] : [item]
       })
     } catch (e) {
-      if (!ac.signal.aborted) setDrawErr(e instanceof Error ? e.message : String(e))
+      if (ac.signal.aborted) return
+      if (e instanceof DrawUnavailable) setDrawOff(true)
+      else setDrawErr(e instanceof Error ? e.message : String(e))
     } finally {
       if (drawAbort.current === ac) setDrawing(false)
     }
@@ -144,7 +184,7 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
 
   // draw once the writer pauses; redraw only when the story has grown or changed a lot
   useEffect(() => {
-    if (!drawOn || editing) return
+    if (!drawOn || drawOff || editing) return
     const words = story.trim()
     if (words.split(/\s+/).length < DRAW_MIN_WORDS) return
     const last = drawnFor.current
@@ -153,7 +193,7 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
     return () => window.clearTimeout(t)
     // drawNow reads the latest fields; only the story should restart the timer
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [story, drawOn, editing])
+  }, [story, drawOn, drawOff, editing])
 
   useEffect(() => () => drawAbort.current?.abort(), [])
 
@@ -214,7 +254,20 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
         story: story.trim(),
         photoIds,
         art: photoIds.length ? undefined : editing?.art,
-        song: song.title.trim() ? { title: song.title.trim(), artist: song.artist.trim() || 'Unknown artist', url: song.url.trim() || undefined, audioId, tempo } : undefined,
+        song: song.title.trim()
+          ? {
+              title: song.title.trim(),
+              artist: song.artist.trim() || 'Unknown artist',
+              url: song.url.trim() || undefined,
+              audioId,
+              tempo,
+              ...(measured && audioId ? { bpm: measured.bpm, bpmSource: 'measured' as const, energy: measured.energy } : {}),
+              mode: mode || undefined,
+              genre: genre.trim() || undefined,
+              year: Number(year) > 1900 && Number(year) < 2100 ? Number(year) : undefined,
+              description: songNote.trim() || undefined,
+            }
+          : undefined,
         ...base,
         theme: t,
         cover: coverFor(t) as Cover,
@@ -319,6 +372,11 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
                     </button>
                   </p>
                 )}
+                {drawOff ? (
+                  <p className="drawn-toggle drawn-off">
+                    Drawing a picture from your words is off here: this server has no image keys (see README). Your own photos work as usual.
+                  </p>
+                ) : (
                 <label className="drawn-toggle">
                   <input
                     type="checkbox"
@@ -332,6 +390,7 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
                   Draw a picture from my story as I write{' '}
                   <InfoTip>Your words are sent to Gemini (to describe the scene) and Pollinations (to draw it). The picture comes back and is kept only on this device.</InfoTip>
                 </label>
+                )}
               </div>
             )}
           </section>
@@ -367,7 +426,10 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
             </div>
 
             <h2 className="step-sub">
-              The song <InfoTip>It sets the darkroom’s chemistry: the tempo rocks the tray and drives the soundscape; the title tints the print.</InfoTip>
+              The song{' '}
+              <InfoTip>
+                It shapes the day, not just plays over it. Tempo sets how long each photo stays and how the tray rocks; a minor key mutes the colours and leaves more empty space; energy sets the contrast and the motion; genre and year choose the texture (an old song adds grain). Only the link and these facts are kept, never the song itself, unless you add your own recording.
+              </InfoTip>
             </h2>
             <div className="fields-2">
               <label className="field">
@@ -387,23 +449,69 @@ export default function Create({ editId, fromDate }: { editId?: string; fromDate
               <span>How it felt</span>
               <div className="chips">
                 {TEMPOS.map(([k, label]) => (
-                  <button key={k} type="button" className={`chip ${tempo === k ? 'is-on' : ''}`} aria-pressed={tempo === k} onClick={() => setTempo(k)}>
+                  <button key={k} type="button" className={`chip ${tempo === k ? 'is-on' : ''}`} aria-pressed={tempo === k}
+                    onClick={() => {
+                      setTempo(k)
+                      // your own sense of the song overrides the measurement
+                      if (measured && tempoFromBpm(measured.bpm) !== k) setMeasured(null)
+                    }}
+                  >
                     {label}
                   </button>
                 ))}
               </div>
             </div>
+            <div className="field">
+              <span>Key</span>
+              <div className="chips">
+                {MODES.map(([k, label]) => (
+                  <button key={label} type="button" className={`chip ${mode === k ? 'is-on' : ''}`} aria-pressed={mode === k} onClick={() => setMode(k)}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="fields-2">
+              <label className="field">
+                <span>Genre</span>
+                <input value={genre} onChange={(e) => setGenre(e.target.value)} placeholder="jazz, techno, folk, piano…" />
+              </label>
+              <label className="field">
+                <span>Year</span>
+                <input type="number" inputMode="numeric" min={1900} max={2100} value={year} onChange={(e) => setYear(e.target.value)} placeholder="1965" />
+              </label>
+            </div>
+            <label className="field">
+              <span>In a few words, what does it sound like?</span>
+              <input value={songNote} onChange={(e) => setSongNote(e.target.value)} placeholder="slow, sad piano and rain; or: loud, bright, everyone singing" />
+            </label>
             <label className="field file-field">
-              <span>Or your own recording (optional) — plays in the darkroom</span>
-              <input type="file" accept="audio/*" onChange={(e) => e.target.files?.[0] && setAudio({ file: e.target.files[0] })} />
+              <span>Or your own recording (optional) — plays in the darkroom, and its tempo is measured on this device</span>
+              <input type="file" accept="audio/*" onChange={(e) => e.target.files?.[0] && chooseAudio(e.target.files[0])} />
               {audio && (
                 <span className="file-chosen">
                   {audio.file ? audio.file.name : 'an audio file is attached'}{' '}
-                  <button type="button" className="link danger" onClick={() => setAudio(null)}>
+                  <button
+                    type="button"
+                    className="link danger"
+                    onClick={() => {
+                      setAudio(null)
+                      setMeasured(null)
+                      setListening('idle')
+                    }}
+                  >
                     remove
                   </button>
                 </span>
               )}
+              {listening === 'busy' && <AppVoice>Listening to it…</AppVoice>}
+              {measured && listening === 'idle' && (
+                <AppVoice>
+                  Measured on this device: {measured.bpm} bpm, energy {Math.round(measured.energy * 100)}%. “How it felt” above follows it; pick another feel to override.
+                </AppVoice>
+              )}
+              {listening === 'no-beat' && <AppVoice>No steady beat in this recording, so the tempo stays as you choose it above.</AppVoice>}
+              {listening === 'failed' && <AppVoice>This browser couldn’t read that file. It will still play if the format is supported; choose the tempo above.</AppVoice>}
             </label>
           </section>
         )}

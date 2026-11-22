@@ -24,6 +24,23 @@ async function pool<T>(items: T[], n: number, fn: (t: T) => Promise<void>) {
 
 const ONCE = 'afterimage.demoAssetsChecked'
 
+/**
+ * Demo days whose photographs are frames from the demo camera roll rather than demo/memories/.
+ * Picked by what is actually in each file (the file names are dates, not contents).
+ */
+const DEMO_PHOTOS: Record<string, string[]> = {
+  // picnic blanket with a paperback · a paper bag of plums · friends' hands sharing food
+  picnic: ['2025-10-04-2130', '2025-10-02-1940', '2019-03-01-1600'].map((n) => `demo/roll/${n}.jpg`),
+  // frost on a windshield · power poles fading into fog · dried hydrangeas in a jar
+  frost: ['2025-11-11-1720', '2025-11-07-0830', '2025-11-13-1705'].map((n) => `demo/roll/${n}.jpg`),
+  // a record player · a handwritten letter by a candle · a blanket and reading glasses
+  records: ['2025-09-06-1330', '2025-09-07-1600', '2025-10-17-1855'].map((n) => `demo/roll/${n}.jpg`),
+}
+
+function photoPaths(art: string) {
+  return DEMO_PHOTOS[art] ?? [art, `${art}-2`, `${art}-3`, `${art}-4`].map((n) => `demo/memories/${n}.jpg`)
+}
+
 export async function upgradeDemoAssets() {
   try {
     if (sessionStorage.getItem(ONCE)) return
@@ -33,10 +50,9 @@ export async function upgradeDemoAssets() {
   }
   const st = getState()
 
-  // 1 · the three demo memories: main photograph + extra frames for the contact strip
+  // 1 · the demo memories: main photograph + extra frames for the contact strip
   for (const m of st.memories.filter((x) => x.demo && x.art && x.photoIds.length === 0)) {
-    const names = [m.art!, `${m.art}-2`, `${m.art}-3`, `${m.art}-4`]
-    const blobs = await Promise.all(names.map((n) => image(`demo/memories/${n}.jpg`)))
+    const blobs = await Promise.all(photoPaths(m.art!).map((p) => image(p)))
     if (!blobs[0]) continue
     const ids: string[] = []
     for (const b of blobs) if (b) ids.push(await putBlob((await develop(b)).full))
